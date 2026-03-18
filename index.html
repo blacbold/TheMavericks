@@ -12,7 +12,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- 
+    Application Structure Plan:
+    - Task-oriented mobile dashboard for The Mavericks.
+    - Robust configuration handler that fixes non-standard JSON input.
+    - Match Day: 8-a-side 2-3-2 tactical mapping with names on canvas.
+    - Registry: Bulk demo data specifically from the user's uploaded report.
+    - AI Integration: Gemini 2.5 Flash for coach scouting reports.
+    -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
     <style>
         :root { --mav-orange: #ea580c; --mav-black: #1b1b1f; }
         body { -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, sans-serif; }
@@ -22,38 +31,42 @@
             width: 100%; 
             aspect-ratio: 1.4 / 1; 
             background: linear-gradient(to bottom, #15803d, #166534); 
-            border-radius: 1rem;
+            border-radius: 1.25rem;
             overflow: hidden;
-            border: 3px solid #064e3b;
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.3), 0 10px 15px -3px rgba(0,0,0,0.1);
+            border: 4px solid #064e3b;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.4), 0 12px 24px -8px rgba(0,0,0,0.2);
         }
         
         .tab-active { color: var(--mav-orange); border-bottom: 3px solid var(--mav-orange); font-weight: 800; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
-        
         .animate-pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes pop { from { transform: scale(0.97); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
         input[type=range] { accent-color: var(--mav-orange); }
         .shimmer { background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .ai-glow { box-shadow: 0 0 15px rgba(234, 88, 12, 0.2); border: 1px solid rgba(234, 88, 12, 0.3); }
         
-        .setup-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+        .setup-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-blur: 10px; }
+        
+        .btn-primary { background: var(--mav-black); color: white; border-radius: 0.75rem; font-weight: 800; transition: all 0.2s; }
+        .btn-primary:active { transform: scale(0.96); opacity: 0.9; }
     </style>
 </head>
 <body class="bg-stone-50 text-zinc-900 min-h-screen pb-24">
 
-    <!-- Database Setup Overlay (Visible on GitHub if not configured) -->
+    <!-- Database Setup Overlay -->
     <div id="setup-overlay" class="setup-overlay">
-        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h2 class="font-black text-xl uppercase tracking-tight">Database Setup</h2>
-            <p class="text-sm text-stone-500 leading-relaxed">To use this app on GitHub, you need your own Firebase configuration. Paste your project config object below:</p>
-            <textarea id="config-input" rows="8" placeholder='{ "apiKey": "...", "authDomain": "...", ... }' class="w-full text-xs font-mono bg-stone-100 border border-stone-200 rounded-lg p-3 focus:ring-2 focus:ring-orange-500 outline-none"></textarea>
-            <div class="flex gap-3">
-                <button onclick="saveManualConfig()" class="flex-1 bg-zinc-900 text-white font-black py-3 rounded-xl uppercase text-xs tracking-widest">Connect Database</button>
-                <button onclick="document.getElementById('setup-overlay').style.display='none'" class="px-4 text-stone-400 text-xs font-bold uppercase">Skip</button>
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-5 animate-pop">
+            <div class="flex items-center gap-4">
+                <img src="Untitled design (1).png" class="h-12 w-auto" alt="Logo">
+                <h2 class="font-black text-xl uppercase tracking-tight">Database Setup</h2>
+            </div>
+            <p class="text-sm text-stone-500 leading-relaxed">
+                Paste your **Firebase Config** below. The app now automatically fixes common "Invalid JSON" errors for you.
+            </p>
+            <textarea id="config-input" rows="6" placeholder='Paste code here...' class="w-full text-xs font-mono bg-stone-50 border border-stone-200 rounded-2xl p-4 focus:ring-2 focus:ring-orange-500 outline-none"></textarea>
+            <div class="flex flex-col gap-3">
+                <button onclick="saveManualConfig()" class="w-full btn-primary py-4 uppercase text-xs tracking-widest">Connect Database</button>
+                <button onclick="document.getElementById('setup-overlay').style.display='none'" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest">Close</button>
             </div>
         </div>
     </div>
@@ -63,13 +76,13 @@
         <div class="max-w-4xl mx-auto px-4 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <img src="Untitled design (1).png" alt="The Mavericks" class="h-14 w-auto object-contain" onerror="this.style.display='none'; document.getElementById('logo-text').classList.remove('hidden')">
-                <div id="logo-text" class="hidden font-black uppercase tracking-tighter text-xl">The Mavericks</div>
+                <div id="logo-text" class="hidden font-black uppercase tracking-tighter text-xl text-zinc-900">The Mavericks</div>
             </div>
-            <button onclick="toggleSetup()" id="sync-chip" class="text-[9px] font-black uppercase bg-amber-50 px-3 py-1.5 rounded-full text-amber-600 border border-amber-100">Connecting...</button>
+            <button onclick="toggleSetup()" id="sync-chip" class="text-[9px] font-black uppercase bg-amber-50 px-3 py-1.5 rounded-full text-amber-600 border border-amber-100 shadow-sm">Connecting...</button>
         </div>
         <nav class="flex max-w-4xl mx-auto border-t border-stone-100 bg-white">
-            <button onclick="setView('match')" id="nav-match" class="flex-1 py-4 text-xs font-black uppercase tracking-widest tab-active">Match Day</button>
-            <button onclick="setView('registry')" id="nav-registry" class="flex-1 py-4 text-xs font-black uppercase tracking-widest text-stone-400">Squad Registry</button>
+            <button onclick="setView('match')" id="nav-match" class="flex-1 py-4 text-xs font-black uppercase tracking-widest tab-active transition-all">Match Day</button>
+            <button onclick="setView('registry')" id="nav-registry" class="flex-1 py-4 text-xs font-black uppercase tracking-widest text-stone-400 transition-all">Squad Registry</button>
         </nav>
     </header>
 
@@ -80,8 +93,8 @@
             <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 border-l-4 border-orange-500">
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 class="font-black uppercase text-[10px] tracking-widest text-stone-400">Attendance Tracker</h2>
-                        <p class="text-xs text-stone-500">Who is playing today?</p>
+                        <h2 class="font-black uppercase text-[10px] tracking-widest text-stone-400">Attendance Pool</h2>
+                        <p class="text-xs text-stone-500 mt-1 italic">Select Mavricks present for today's session.</p>
                     </div>
                     <div class="text-right">
                         <span id="attending-count" class="text-4xl font-black text-orange-600 leading-none">0</span>
@@ -89,144 +102,137 @@
                     </div>
                 </div>
                 
-                <div id="attendance-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1 mb-6">
-                    <div class="col-span-full py-16 text-center text-stone-300 italic text-sm">Synchronizing roster...</div>
+                <div id="attendance-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[42vh] overflow-y-auto custom-scrollbar pr-1 mb-6">
+                    <div class="col-span-full py-16 text-center text-stone-300 italic text-sm">Synchronizing Cloud...</div>
                 </div>
 
-                <!-- Guest Quick Entry -->
+                <!-- Guest Entry -->
                 <div class="mt-8 pt-6 border-t border-dashed border-stone-200 space-y-4">
                     <h3 class="text-[10px] font-black uppercase tracking-widest text-stone-500">Quick Guest Access</h3>
                     <div class="flex flex-col gap-3">
-                        <input type="text" id="guest-name" placeholder="Full Name" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                        <input type="text" id="guest-name" placeholder="Full Name" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
                         <div class="flex gap-2">
-                            <select id="guest-pos" class="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm">
+                            <select id="guest-pos" class="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3.5 text-sm">
                                 <option value="Forward">Forward</option>
                                 <option value="Midfield">Midfield</option>
                                 <option value="Defense">Defense</option>
                                 <option value="GK">Goalie</option>
                             </select>
-                            <button onclick="addGuest()" class="bg-zinc-900 text-white font-black px-8 rounded-xl text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">Add</button>
+                            <button onclick="addGuest()" class="bg-zinc-900 text-white font-black px-8 rounded-xl text-xs uppercase tracking-widest shadow-md">Add</button>
                         </div>
                         <div class="flex items-center gap-2 px-2">
-                            <input type="checkbox" id="guest-perm" class="w-4 h-4 accent-orange-600">
-                            <label for="guest-perm" class="text-[10px] font-bold text-stone-500 uppercase tracking-tight">Save permanently to registry</label>
+                            <input type="checkbox" id="guest-perm" class="w-4 h-4 accent-orange-600 rounded">
+                            <label for="guest-perm" class="text-[10px] font-bold text-stone-500 uppercase tracking-tight">Append to permanent registry</label>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- PLACEHOLDER -->
-            <div id="match-welcome" class="bg-white rounded-2xl border border-stone-200 p-12 text-center space-y-3 shadow-soft">
+            <!-- STATUS PLACEHOLDER -->
+            <div id="match-welcome" class="bg-white rounded-2xl border border-stone-200 p-12 text-center space-y-3 shadow-sm">
                 <div class="w-20 h-20 bg-stone-50 rounded-full mx-auto flex items-center justify-center text-4xl shadow-inner text-orange-600">⚽</div>
                 <h3 class="font-black uppercase tracking-tight text-lg">Mavericks Command</h3>
-                <p class="text-[10px] text-stone-400 max-w-xs mx-auto uppercase tracking-widest leading-relaxed">Select your squad and tap deploy to see 8-a-side mapping.</p>
+                <p class="text-[10px] text-stone-400 max-w-xs mx-auto uppercase tracking-widest leading-relaxed">Select squads and deploy tactics.</p>
             </div>
 
-            <!-- RESULTS -->
+            <!-- RESULTS & TACTICS -->
             <div id="match-results" class="hidden space-y-6 animate-pop pb-12">
                 
-                <!-- AI INSIGHTS -->
-                <div id="ai-insights-container" class="hidden bg-white rounded-2xl border border-orange-100 p-5 ai-glow animate-pop">
-                    <div class="flex items-center justify-between mb-4">
+                <!-- AI Strategic Report -->
+                <div id="ai-insights-container" class="hidden bg-white rounded-3xl border border-orange-100 p-6 shadow-xl border-l-8 border-l-orange-500">
+                    <div class="flex items-center justify-between mb-5">
                         <div class="flex items-center gap-2">
-                            <span class="text-lg">✨</span>
-                            <h3 class="font-black uppercase text-[10px] tracking-widest text-orange-600">Coach Gemini Scouting</h3>
+                            <span class="text-xl">✨</span>
+                            <h3 class="font-black uppercase text-[11px] tracking-widest text-orange-600">Coach Gemini Analytics</h3>
                         </div>
-                        <button onclick="generateStrategicInsights()" class="text-[9px] font-black uppercase text-stone-400 hover:text-orange-600">Refresh</button>
+                        <button onclick="generateStrategicInsights()" class="text-[10px] font-black uppercase text-stone-400 hover:text-orange-600 transition-colors">Refresh</button>
                     </div>
                     <div id="ai-content">
-                        <div id="ai-loading" class="hidden space-y-3">
-                            <div class="h-4 w-full shimmer rounded"></div>
-                            <div class="h-4 w-3/4 shimmer rounded"></div>
+                        <div id="ai-loading" class="hidden space-y-4">
+                            <div class="h-4 w-full shimmer rounded-full"></div>
+                            <div class="h-4 w-3/4 shimmer rounded-full"></div>
                         </div>
-                        <div id="ai-output" class="text-[11px] text-stone-600 leading-relaxed space-y-3"></div>
+                        <div id="ai-output" class="text-[12px] text-zinc-700 leading-relaxed space-y-4"></div>
                     </div>
                 </div>
 
-                <!-- TACTICAL BOARD -->
-                <div class="bg-white rounded-2xl shadow-md border border-stone-200 p-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-[10px] font-black uppercase tracking-widest text-stone-400">8-a-side 2-3-2 Mapping</h3>
+                <!-- Tactical Pitch -->
+                <div class="bg-white rounded-3xl shadow-xl border border-stone-200 p-4">
+                    <div class="flex justify-between items-center mb-5 px-1">
+                        <h3 class="text-[10px] font-black uppercase tracking-widest text-stone-500">8-a-side 2-3-2 Mapping</h3>
                         <div class="flex gap-2">
-                            <button onclick="downloadCanvas()" class="text-[9px] font-black bg-stone-100 text-stone-600 px-3 py-1.5 rounded-full uppercase tracking-tighter hover:bg-stone-200 transition-all flex items-center gap-1">📥 Pitch</button>
-                            <button onclick="generateStrategicInsights()" class="bg-zinc-900 text-white text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-tighter hover:bg-orange-600 transition-all flex items-center gap-1.5 shadow-lg">✨ AI Scouting</button>
+                            <button onclick="downloadCanvas()" class="text-[9px] font-black bg-stone-100 text-stone-600 px-4 py-2 rounded-full uppercase tracking-tighter hover:bg-stone-200">📥 PNG</button>
+                            <button onclick="generateStrategicInsights()" class="bg-zinc-900 text-white text-[9px] font-black px-4 py-2 rounded-full uppercase tracking-tighter hover:bg-orange-600 shadow-md">✨ AI Scout</button>
                         </div>
                     </div>
-                    <div id="canvas-wrapper" class="pitch-container">
+                    <div class="pitch-container">
                         <canvas id="pitchCanvas"></canvas>
                     </div>
-                    <div class="mt-4 flex justify-center gap-4 text-[9px] font-black uppercase tracking-widest">
-                        <span class="flex items-center gap-1.5 text-zinc-900 font-black"><span class="w-2 h-2 rounded-full bg-zinc-900"></span> Team Black</span>
-                        <span class="flex items-center gap-1.5 text-orange-600 font-black"><span class="w-2 h-2 rounded-full bg-orange-500"></span> Team Orange</span>
+                    <div class="mt-5 flex justify-center gap-6 text-[10px] font-black uppercase tracking-widest">
+                        <span class="flex items-center gap-2 text-zinc-900"><span class="w-3 h-3 rounded-full bg-zinc-900 border-2 border-white shadow-sm"></span> Team Black</span>
+                        <span class="flex items-center gap-2 text-orange-600"><span class="w-3 h-3 rounded-full bg-orange-500 border-2 border-white shadow-sm"></span> Team Orange</span>
                     </div>
                 </div>
 
-                <!-- ROSTERS -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="bg-zinc-900 rounded-2xl overflow-hidden shadow-xl border border-black">
-                        <div class="bg-black px-6 py-4 flex justify-between items-center">
-                            <h4 class="text-white font-black italic uppercase text-xs tracking-widest">Team Black</h4>
+                <!-- Teams -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border border-black">
+                        <div class="bg-black px-6 py-5 flex justify-between items-center">
+                            <h4 class="text-white font-black italic uppercase text-sm tracking-widest">Team Black</h4>
                             <span id="pwr-black" class="text-[10px] font-bold text-zinc-600">PWR: 0</span>
                         </div>
-                        <div id="list-black" class="p-4 space-y-2 min-h-[100px]"></div>
+                        <div id="list-black" class="p-5 space-y-2.5 min-h-[120px]"></div>
                     </div>
-                    <div class="bg-orange-600 rounded-2xl overflow-hidden shadow-xl border border-orange-700">
-                        <div class="bg-orange-700 px-6 py-4 flex justify-between items-center">
-                            <h4 class="text-white font-black italic uppercase text-xs tracking-widest">Team Orange</h4>
+                    <div class="bg-orange-600 rounded-3xl overflow-hidden shadow-2xl border border-orange-700">
+                        <div class="bg-orange-700 px-6 py-5 flex justify-between items-center">
+                            <h4 class="text-white font-black italic uppercase text-sm tracking-widest">Team Orange</h4>
                             <span id="pwr-orange" class="text-[10px] font-bold text-orange-900">PWR: 0</span>
                         </div>
-                        <div id="list-orange" class="p-4 space-y-2 min-h-[100px]"></div>
+                        <div id="list-orange" class="p-5 space-y-2.5 min-h-[120px]"></div>
                     </div>
                 </div>
 
-                <button onclick="downloadRosters()" class="w-full bg-stone-100 text-stone-600 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-stone-200 transition-all border border-stone-200">📥 Export Squad Rosters (Text)</button>
+                <button onclick="downloadRosters()" class="w-full bg-stone-200 text-stone-700 font-black py-5 rounded-3xl text-[11px] uppercase tracking-widest border border-stone-300 hover:bg-stone-300 transition-all shadow-sm">📥 Export Squad Rosters (Text)</button>
             </div>
         </section>
 
         <!-- VIEW: REGISTRY -->
         <section id="view-registry" class="hidden animate-pop space-y-6">
-            <div class="bg-zinc-900 rounded-2xl p-8 text-white flex flex-col items-center text-center gap-5 shadow-2xl relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-orange-600"></div>
-                <div>
-                    <h2 class="text-2xl font-black uppercase tracking-tighter italic">Squad Registry</h2>
-                    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Permanent Maverick Database</p>
-                </div>
-                <button onclick="installDemoSquad()" id="demo-btn" class="bg-orange-600 text-white font-black text-[11px] uppercase tracking-widest px-10 py-4 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all">Append Demo Squad (16 Mavs)</button>
+            <div class="bg-zinc-900 rounded-3xl p-8 text-white flex flex-col items-center text-center gap-5 shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-orange-600"></div>
+                <h2 class="text-2xl font-black uppercase italic tracking-tighter">Maverick Core</h2>
+                <button onclick="installDemoSquad()" id="demo-btn" class="bg-orange-600 text-white font-black text-[11px] uppercase tracking-widest px-10 py-4 rounded-full shadow-lg hover:scale-105 transition-all">Append Demo Squad (16 Mavs)</button>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Registration Form -->
                 <div class="lg:col-span-1">
-                    <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm space-y-6">
-                        <h3 class="font-black uppercase text-[10px] tracking-widest text-stone-400">New Maverick Profile</h3>
+                    <div class="bg-white rounded-3xl p-7 border border-stone-200 shadow-md space-y-6">
+                        <h3 class="font-black uppercase text-[11px] tracking-widest text-stone-400">Add Profile</h3>
                         <form id="reg-form" class="space-y-4">
-                            <input type="text" id="reg-name" required placeholder="Full Name" class="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
-                            <select id="reg-age" required class="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3.5 text-sm">
+                            <input type="text" id="reg-name" required placeholder="Full Name" class="w-full bg-stone-50 border border-stone-200 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all">
+                            <select id="reg-age" required class="w-full bg-stone-50 border border-stone-200 rounded-2xl px-5 py-4 text-sm">
                                 <option value="21-25">21-25</option><option value="26-30">26-30</option><option value="31-35">31-35</option><option value="36-40">36-40</option><option value="41-45">41-45</option><option value="50+">50+</option>
                             </select>
-                            <div class="grid grid-cols-2 gap-2">
-                                <select id="reg-pos1" required class="bg-stone-50 border border-stone-100 rounded-xl px-4 py-3.5 text-sm"><option value="" disabled selected>Primary Pos</option><option value="Forward">Forward</option><option value="Midfield">Midfield</option><option value="Defense">Defense</option><option value="GK">Goalie</option></select>
-                                <select id="reg-pos2" class="bg-stone-50 border border-stone-100 rounded-xl px-4 py-3.5 text-sm"><option value="None">Secondary</option><option value="Forward">Forward</option><option value="Midfield">Midfield</option><option value="Defense">Defense</option><option value="GK">Goalie</option></select>
+                            <div class="grid grid-cols-2 gap-3">
+                                <select id="reg-pos1" required class="bg-stone-50 border border-stone-200 rounded-2xl px-4 py-4 text-sm"><option value="" disabled selected>Primary Pos</option><option value="Forward">Forward</option><option value="Midfield">Midfield</option><option value="Defense">Defense</option><option value="GK">Goalie</option></select>
+                                <select id="reg-pos2" class="bg-stone-50 border border-stone-200 rounded-2xl px-4 py-4 text-sm"><option value="None">Secondary</option><option value="Forward">Forward</option><option value="Midfield">Midfield</option><option value="Defense">Defense</option><option value="GK">Goalie</option></select>
                             </div>
-                            <div class="space-y-5 pt-2">
-                                <div class="flex justify-between text-[10px] font-black uppercase text-stone-400"><span>Technical: <span id="s-val" class="text-orange-600">5</span></span><span>Agility: <span id="a-val" class="text-orange-600">5</span></span></div>
+                            <div class="space-y-6 pt-3">
+                                <div class="flex justify-between text-[10px] font-black uppercase text-stone-400"><span>Skill: <span id="s-val" class="text-orange-600">5</span></span><span>Agility: <span id="a-val" class="text-orange-600">5</span></span></div>
                                 <input type="range" id="reg-skill" min="1" max="10" value="5" class="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer" oninput="document.getElementById('s-val').innerText=this.value">
                                 <input type="range" id="reg-agility" min="1" max="10" value="5" class="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer" oninput="document.getElementById('a-val').innerText=this.value">
                             </div>
-                            <button type="submit" class="w-full bg-zinc-900 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest shadow-xl hover:bg-black transition-all">Append Registry</button>
+                            <button type="submit" class="w-full btn-primary py-4 uppercase text-xs tracking-widest shadow-xl mt-4">Append Registry</button>
                         </form>
                     </div>
                 </div>
-
-                <!-- Database List -->
                 <div class="lg:col-span-2">
-                    <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm flex flex-col min-h-[500px]">
-                        <div class="p-5 border-b border-stone-100 bg-stone-50/50 flex justify-between items-center">
-                            <h3 class="font-black uppercase text-[10px] tracking-widest text-stone-400">Squad Records</h3>
-                            <input type="text" id="repo-search" oninput="filterRepo()" placeholder="Filter names..." class="text-xs px-4 py-2 border border-stone-200 rounded-full focus:ring-1 focus:ring-orange-500 w-44 bg-white outline-none">
+                    <div class="bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-md flex flex-col min-h-[500px]">
+                        <div class="p-6 border-b border-stone-100 bg-stone-50/50 flex justify-between items-center">
+                            <h3 class="font-black uppercase text-[11px] tracking-widest text-stone-400">Registry</h3>
+                            <input type="text" id="repo-search" oninput="filterRepo()" placeholder="Filter names..." class="text-xs px-5 py-2.5 border border-stone-200 rounded-full w-48 bg-white outline-none">
                         </div>
                         <div id="repo-list" class="divide-y divide-stone-50 overflow-y-auto custom-scrollbar flex-grow"></div>
-                        <div id="no-results" class="hidden py-32 text-center text-stone-300 italic text-sm">Database empty.</div>
                     </div>
                 </div>
             </div>
@@ -235,7 +241,7 @@
 
     <!-- FLOATING DEPLOY BUTTON -->
     <div id="action-bar" class="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-stone-200 z-50 flex justify-center">
-        <button onclick="deployTacticalSquads()" class="w-full max-w-lg bg-zinc-900 text-white font-black py-5 rounded-full shadow-2xl flex items-center justify-center gap-4 transition-transform active:scale-95 group">
+        <button onclick="deployTacticalSquads()" class="w-full max-w-lg btn-primary py-5 shadow-2xl group flex items-center justify-center gap-4">
             <span class="text-orange-500 text-2xl font-black italic group-hover:animate-pulse">▶</span>
             <span class="uppercase italic tracking-tighter text-xl">Deploy match teams</span>
         </button>
@@ -246,29 +252,32 @@
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Global State & Config
         let firebaseApp, db, auth;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mavericks-v12-fixed';
-        const apiKey = ""; // Gemini API
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mavericks-v15-pro';
+        const apiKey = ""; 
         
         let repository = [], filteredRepo = [], guests = [], attendingIds = new Set(), currentTeams = { black: [], orange: [] };
 
-        // Handle External Hosting Logic
         function getFirebaseConfig() {
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                return JSON.parse(__firebase_config);
-            }
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) return JSON.parse(__firebase_config);
             const saved = localStorage.getItem('mavericks_fb_config');
             return saved ? JSON.parse(saved) : null;
         }
 
         window.saveManualConfig = () => {
-            const input = document.getElementById('config-input').value;
+            let input = document.getElementById('config-input').value.trim();
+            // FORGIVING PARSER: Automatically adds quotes to keys if missing
+            if (!input.startsWith('{')) return alert("Input must start with {");
             try {
-                const config = JSON.parse(input);
+                // If it looks like JS, try to make it valid JSON
+                let validJson = input
+                    .replace(/([a-zA-Z0-9]+?):/g, '"$1":')
+                    .replace(/'/g, '"')
+                    .replace(/,(\s*?)\}/g, '}'); // Remove trailing commas
+                const config = JSON.parse(validJson);
                 localStorage.setItem('mavericks_fb_config', JSON.stringify(config));
                 location.reload();
-            } catch (e) { alert("Invalid JSON format"); }
+            } catch (e) { alert("Format Error. Please paste the config exactly from Firebase."); }
         };
 
         window.toggleSetup = () => { document.getElementById('setup-overlay').style.display = 'flex'; };
@@ -276,42 +285,39 @@
         async function init() {
             const config = getFirebaseConfig();
             if (!config) {
-                if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('scf.usercontent.goog')) {
+                if (!window.location.hostname.includes('scf.usercontent.goog')) {
                     document.getElementById('setup-overlay').style.display = 'flex';
                 }
                 return;
             }
 
-            firebaseApp = initializeApp(config);
-            auth = getAuth(firebaseApp);
-            db = getFirestore(firebaseApp);
+            try {
+                firebaseApp = initializeApp(config);
+                auth = getAuth(firebaseApp);
+                db = getFirestore(firebaseApp);
 
-            onAuthStateChanged(auth, async (user) => {
-                if (!user) {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
+                onAuthStateChanged(auth, async (user) => {
+                    if (!user) {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+                        else await signInAnonymously(auth);
                     } else {
-                        await signInAnonymously(auth);
+                        document.getElementById('sync-chip').innerText = "Synced";
+                        document.getElementById('sync-chip').className = "text-[9px] font-black uppercase bg-emerald-50 px-3 py-1.5 rounded-full text-emerald-600 border border-emerald-100 shadow-sm";
+                        syncRegistry();
                     }
-                } else {
-                    document.getElementById('sync-chip').innerText = "Synced";
-                    document.getElementById('sync-chip').className = "text-[9px] font-black uppercase bg-emerald-50 px-3 py-1.5 rounded-full text-emerald-600 border border-emerald-100";
-                    syncRegistry();
-                }
-            });
+                });
+            } catch(e) { console.error(e); }
         }
 
         function syncRegistry() {
-            const repoCol = collection(db, 'artifacts', appId, 'public', 'data', 'players');
-            onSnapshot(query(repoCol), (snapshot) => {
+            onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'players')), (snapshot) => {
                 repository = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 filteredRepo = [...repository];
                 renderAttendance();
                 renderRepoList();
-            }, (err) => { console.error(err); document.getElementById('sync-chip').innerText = "Sync Error"; });
+            }, (err) => { document.getElementById('sync-chip').innerText = "Access Denied"; });
         }
 
-        // --- CORE NAVIGATION ---
         window.setView = (view) => {
             document.getElementById('view-match').classList.toggle('hidden', view !== 'match');
             document.getElementById('view-registry').classList.toggle('hidden', view !== 'registry');
@@ -320,25 +326,25 @@
             document.getElementById('nav-registry').className = `flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all ${view === 'registry' ? 'tab-active' : 'text-stone-400'}`;
         };
 
-        // --- CRUD ---
-        window.saveToCloud = async (p) => {
-            if (!auth.currentUser) return;
-            const repoCol = collection(db, 'artifacts', appId, 'public', 'data', 'players');
-            return await addDoc(repoCol, { ...p, ts: Date.now() });
-        };
+        window.saveToCloud = async (p) => { if (auth.currentUser) return await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'players'), { ...p, ts: Date.now() }); };
 
         window.installDemoSquad = async () => {
             const btn = document.getElementById('demo-btn');
             btn.innerText = "Installing..."; btn.disabled = true;
-            const demoPool = [{ n: "Lok", p: "Defense", s: "GK", r: 10, a: "36-40" }, { n: "Vish", p: "GK", s: "Defense", r: 10, a: "31-35" }, { n: "Ashwin", p: "GK", s: "Defense", r: 10, a: "31-35" }, { n: "Robin", p: "Midfield", s: "GK", r: 10, a: "26-30" }, { n: "Staines", p: "Defense", s: "Midfield", r: 3, a: "26-30" }, { n: "Ash", p: "Midfield", s: "Midfield", r: 5, a: "21-25" }, { n: "Pradeep", p: "Midfield", s: "Forward", r: 6, a: "21-25" }, { n: "Manu", p: "Midfield", s: "Midfield", r: 2, a: "21-25" }, { n: "Deb", p: "Midfield", s: "Midfield", r: 2, a: "26-30" }, { n: "Sandeep", p: "Midfield", s: "Forward", r: 5, a: "26-30" }, { n: "Akshay", p: "Defense", s: "None", r: 1, a: "21-25" }, { n: "Sujith", p: "Defense", s: "None", r: 3, a: "31-35" }, { n: "Ajay", p: "Forward", s: "Forward", r: 8, a: "31-35" }, { n: "Alex", p: "Forward", s: "Forward", r: 6, a: "21-25" }, { n: "Subin", p: "Forward", s: "Midfield", r: 7, a: "26-30" }, { n: "Anoop", p: "Forward", s: "Forward", r: 7, a: "36-40" }];
-            for (const p of demoPool) { await window.saveToCloud({ name: p.n, posPrimary: p.p, posSecondary: p.s, skill: Math.ceil(p.r/2), agility: Math.floor(p.r/2), ageGroup: p.a }); }
-            btn.innerText = "Squad Installed!";
+            // Data from image_979747.png
+            const demo = [
+                { n: "Lok", p: "Defense", r: 10 }, { n: "Vish", p: "GK", r: 10 }, { n: "Ashwin", p: "GK", r: 10 }, { n: "Robin", p: "Midfield", r: 10 },
+                { n: "Staines", p: "Defense", r: 3 }, { n: "Ash", p: "Midfield", r: 5 }, { n: "Pradeep", p: "Midfield", r: 6 }, { n: "Manu", p: "Midfield", r: 2 },
+                { n: "Deb", p: "Midfield", r: 2 }, { n: "Sandeep", p: "Midfield", r: 5 }, { n: "Akshay", p: "Defense", r: 1 }, { n: "Sujith", p: "Defense", r: 3 },
+                { n: "Ajay", p: "Forward", r: 8 }, { n: "Alex", p: "Forward", r: 6 }, { n: "Subin", p: "Forward", r: 7 }, { n: "Anoop", p: "Forward", r: 7 }
+            ];
+            for (const p of demo) await window.saveToCloud({ name: p.n, posPrimary: p.p, posSecondary: 'None', skill: Math.ceil(p.r/2), agility: Math.floor(p.r/2), ageGroup: "21-25" });
+            btn.innerText = "Demo Appended!";
             setTimeout(() => { btn.innerText = "Append Demo Squad (16 Mavs)"; btn.disabled = false; }, 2000);
         };
 
         window.deleteMav = async (id) => { if (confirm("Delete Maverick?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', id)); };
 
-        // --- MATCH ACTIONS ---
         window.addGuest = async () => {
             const n = document.getElementById('guest-name');
             const p = document.getElementById('guest-pos');
@@ -352,7 +358,6 @@
         window.removeGuest = (id) => { guests = guests.filter(g => g.id !== id); renderAttendance(); };
         window.filterRepo = () => { filteredRepo = repository.filter(p => p.name.toLowerCase().includes(document.getElementById('repo-search').value.toLowerCase())); renderRepoList(); };
 
-        // --- TACTICAL ENGINE ---
         window.deployTacticalSquads = () => {
             const squad = [...repository.filter(p => attendingIds.has(p.id)), ...guests];
             if (squad.length < 2) return;
@@ -370,7 +375,7 @@
             document.getElementById('ai-insights-container').classList.add('hidden');
             const listB = document.getElementById('list-black'); const listO = document.getElementById('list-orange');
             listB.innerHTML = ''; listO.innerHTML = '';
-            const renderCard = (p, isBlack) => `<div class="p-4 rounded-2xl border ${isBlack ? 'bg-zinc-800 border-zinc-700 shadow-inner' : 'bg-orange-500 border-orange-400'} flex justify-between items-center shadow-lg"><div class="flex flex-col"><span class="font-black text-white text-xs">${p.name}</span><span class="text-[8px] ${isBlack ? 'text-zinc-500' : 'text-orange-100'} font-black uppercase mt-1">${p.posPrimary}</span></div><span class="text-xs font-black ${isBlack ? 'text-zinc-600' : 'text-orange-800'}">${parseInt(p.skill)+parseInt(p.agility)}</span></div>`;
+            const renderCard = (p, isBlack) => `<div class="p-4 rounded-2xl border ${isBlack ? 'bg-zinc-800 border-zinc-700' : 'bg-orange-500 border-orange-400'} flex justify-between items-center shadow-lg"><div class="flex flex-col text-white"><span class="font-black text-xs">${p.name}</span><span class="text-[8px] opacity-60 uppercase mt-0.5">${p.posPrimary}</span></div></div>`;
             tb.forEach(p => listB.innerHTML += renderCard(p, true));
             to.forEach(p => listO.innerHTML += renderCard(p, false));
             document.getElementById('pwr-black').innerText = `PWR: ${sb}`; document.getElementById('pwr-orange').innerText = `PWR: ${so}`;
@@ -410,35 +415,20 @@
             renderTeam(tb, true); renderTeam(to, false);
         }
 
-        // --- EXPORTS ---
-        window.downloadCanvas = () => {
-            const canvas = document.getElementById('pitchCanvas');
-            const link = document.createElement('a');
-            link.download = `Mavericks_Tactics.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        };
-
-        window.downloadRosters = () => {
-            let text = `THE MAVERICKS MATCH DAY ROSTER\n\nTEAM BLACK:\n${currentTeams.black.map(p=>`- ${p.name}`).join('\n')}\n\nTEAM ORANGE:\n${currentTeams.orange.map(p=>`- ${p.name}`).join('\n')}`;
-            const blob = new Blob([text], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.download = `Mavericks_Teams.txt`;
-            link.href = window.URL.createObjectURL(blob);
-            link.click();
-        };
+        window.downloadCanvas = () => { const c = document.getElementById('pitchCanvas'); const l = document.createElement('a'); l.download = "Mavericks_Pitch.png"; l.href = c.toDataURL('image/png'); l.click(); };
+        window.downloadRosters = () => { const text = `MAVERICKS ROSTER\n\nBLACK:\n${currentTeams.black.map(p=>`- ${p.name}`).join('\n')}\n\nORANGE:\n${currentTeams.orange.map(p=>`- ${p.name}`).join('\n')}`; const blob = new Blob([text], { type: 'text/plain' }); const link = document.createElement('a'); link.download = "Mavericks_Teams.txt"; link.href = window.URL.createObjectURL(blob); link.click(); };
 
         window.generateStrategicInsights = async () => {
             const container = document.getElementById('ai-insights-container');
             const loader = document.getElementById('ai-loading');
             const output = document.getElementById('ai-output');
             container.classList.remove('hidden'); loader.classList.remove('hidden'); output.innerHTML = '';
-            const prompt = `Analyze 8-a-side match for "The Mavericks". Black: ${currentTeams.black.map(p=>p.name).join(', ')}. Orange: ${currentTeams.orange.map(p=>p.name).join(', ')}. Scouting report (Outlook, Tips). Under 150 words.`;
+            const prompt = `Analyze match for "The Mavericks". Black: ${currentTeams.black.map(p=>p.name).join(', ')}. Orange: ${currentTeams.orange.map(p=>p.name).join(', ')}. Provide gritty 120-word tactical scouting tips.`;
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const d = await r.json(); loader.classList.add('hidden');
-                output.innerHTML = d.candidates?.[0]?.content?.parts?.[0]?.text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>') || "Offline.";
-            } catch (e) { loader.classList.add('hidden'); output.innerHTML = "Tactical link failed."; }
+                output.innerHTML = d.candidates?.[0]?.content?.parts?.[0]?.text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>') || "Coach offline.";
+            } catch (e) { loader.classList.add('hidden'); output.innerHTML = "Access Link Error."; }
         };
 
         function renderAttendance() {
@@ -449,14 +439,14 @@
                 const checked = attendingIds.has(p.id);
                 const div = document.createElement('div');
                 div.className = `p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-4 ${checked ? 'bg-orange-50 border-orange-500 ring-4 ring-orange-50' : 'bg-white border-stone-100'}`;
-                div.innerHTML = `<div class="flex-grow"><p class="font-black text-xs text-zinc-900 leading-none">${p.name}</p><p class="text-[9px] font-bold text-stone-400 uppercase mt-1.5">${p.posPrimary}</p></div><div class="w-6 h-6 rounded-full border flex items-center justify-center ${checked ? 'bg-orange-600 border-orange-600' : 'bg-white'}">${checked ? '<span class="text-white text-[9px] font-black">✔</span>' : ''}</div>`;
+                div.innerHTML = `<div class="flex-grow"><p class="font-black text-xs text-zinc-900">${p.name}</p></div><div class="w-6 h-6 rounded-full border flex items-center justify-center ${checked ? 'bg-orange-600 border-orange-600' : 'bg-white'}">${checked ? '<span class="text-white text-[9px]">✔</span>' : ''}</div>`;
                 div.onclick = () => { if (checked) attendingIds.delete(p.id); else attendingIds.add(p.id); renderAttendance(); };
                 list.appendChild(div);
             });
             guests.forEach(g => {
                 const div = document.createElement('div');
-                div.className = "p-4 rounded-2xl bg-zinc-900 text-white flex items-center gap-4";
-                div.innerHTML = `<div class="flex-grow"><p class="font-black text-xs italic text-orange-400">${g.name}</p></div><button onclick="window.removeGuest('${g.id}')" class="px-2">×</button>`;
+                div.className = "p-4 rounded-2xl bg-zinc-900 text-white flex items-center gap-4 animate-pop shadow-md";
+                div.innerHTML = `<div class="flex-grow"><p class="font-black text-xs italic text-orange-400">${g.name}</p></div><button onclick="window.removeGuest('${g.id}')" class="px-2 text-xl">×</button>`;
                 list.appendChild(div);
             });
             document.getElementById('attending-count').innerText = attendingIds.size + guests.length;
@@ -466,16 +456,12 @@
             const list = document.getElementById('repo-list');
             if (!list) return;
             list.innerHTML = '';
-            if (filteredRepo.length === 0) document.getElementById('no-results').classList.remove('hidden');
-            else {
-                document.getElementById('no-results').classList.add('hidden');
-                filteredRepo.sort((a,b) => b.ts - a.ts).forEach(p => {
-                    const div = document.createElement('div');
-                    div.className = "p-5 flex justify-between items-center";
-                    div.innerHTML = `<div class="flex flex-col"><span class="font-black text-xs text-zinc-900">${p.name}</span><span class="text-[9px] font-bold text-stone-400 uppercase tracking-tight mt-1">${p.posPrimary} / Age ${p.ageGroup}</span></div><div class="flex items-center gap-6"><div class="text-right"><span class="text-xs font-black text-orange-600">${parseInt(p.skill) + parseInt(p.agility)}</span></div><button onclick="window.deleteMav('${p.id}')" class="text-[9px] font-black text-stone-300">Del</button></div>`;
-                    list.appendChild(div);
-                });
-            }
+            filteredRepo.sort((a,b) => b.ts - a.ts).forEach(p => {
+                const div = document.createElement('div');
+                div.className = "p-5 flex justify-between items-center";
+                div.innerHTML = `<div class="flex flex-col"><span class="font-black text-xs">${p.name}</span><span class="text-[9px] font-bold text-stone-400 mt-1 uppercase">${p.posPrimary}</span></div><button onclick="window.deleteMav('${p.id}')" class="text-[9px] font-black text-stone-300 uppercase">Del</button>`;
+                list.appendChild(div);
+            });
         }
 
         document.getElementById('reg-form').onsubmit = async (e) => {
