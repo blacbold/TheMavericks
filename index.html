@@ -35,7 +35,7 @@
         .shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
         
         .setup-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-blur: 15px; }
-        .setup-card { background: white; border-radius: 2rem; padding: 2.5rem; max-width: 480px; width: 100%; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.6); }
+        .setup-card { background: white; border-radius: 2.5rem; padding: 2.5rem; max-width: 480px; width: 100%; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.6); }
         .btn-primary { background: var(--mav-black); color: white; border-radius: 1rem; font-weight: 800; transition: all 0.2s; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 3.5rem; cursor: pointer; border: none; }
         .btn-primary:active { transform: scale(0.96); }
         
@@ -61,9 +61,9 @@
                 <h2 class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Mavericks Cloud</h2>
             </div>
             <p class="text-sm text-stone-500 leading-relaxed italic">
-                Direct link to <strong>themavericks-837d5</strong> is active. Authentication is handled automatically for GitHub hosting.
+                Direct link to <strong>themavericks-837d5</strong> is active.
             </p>
-            <button onclick="window.closeModals()" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Enter Application</button>
+            <button onclick="window.closeModals()" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Dismiss</button>
         </div>
     </div>
 
@@ -76,12 +76,12 @@
             </div>
             <div class="flex flex-col items-end">
                 <button id="sync-chip" onclick="window.toggleSetup()" class="text-[9px] font-black uppercase bg-amber-50 px-4 py-2 rounded-full text-amber-600 border-2 border-amber-100 shadow-sm transition-all hover:scale-105 active:scale-95">Connecting...</button>
-                <div id="status-debug" class="text-[7px] font-bold text-stone-300 uppercase mt-1">Authenticating...</div>
+                <div id="status-debug" class="text-[7px] font-bold text-stone-300 uppercase mt-1">Initializing...</div>
             </div>
         </div>
         <nav class="flex max-w-4xl mx-auto border-t border-stone-100 bg-white shadow-sm overflow-hidden">
             <button onclick="setView('match')" id="nav-match" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest tab-active transition-all">Match Day</button>
-            <button onclick="setView('records')" id="nav-records" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all">History</button>
+            <button onclick="setView('records')" id="nav-records" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all text-center">History</button>
             <button onclick="setView('registry')" id="nav-registry" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all">Registry</button>
         </nav>
     </header>
@@ -94,7 +94,7 @@
                 <div class="flex justify-between items-start mb-8">
                     <div>
                         <h2 class="font-black uppercase text-xs tracking-widest text-zinc-400">Match Day Selection</h2>
-                        <p class="text-sm text-stone-500 mt-1 font-medium italic">Toggle confirm players at the pitch.</p>
+                        <p class="text-sm text-stone-500 mt-1 font-medium italic">Check players ready for the pitch.</p>
                     </div>
                     <div class="text-right bg-stone-50 px-5 py-3 rounded-2xl border border-stone-100 shadow-inner">
                         <span id="attending-count" class="text-5xl font-black text-orange-600 leading-none">0</span>
@@ -106,7 +106,7 @@
                 </div>
 
                 <div class="mt-10 pt-8 border-t-2 border-dashed border-stone-100 space-y-5">
-                    <h3 class="text-[11px] font-black uppercase tracking-widest text-zinc-900">Add Guest</h3>
+                    <h3 class="text-[11px] font-black uppercase tracking-widest text-zinc-900">Add Guest Maverick</h3>
                     <div class="flex flex-col gap-3">
                         <input type="text" id="guest-name" placeholder="Full Name" class="form-input">
                         <div class="flex gap-3">
@@ -122,7 +122,7 @@
             <div id="match-welcome" class="bg-white rounded-3xl border border-stone-200 p-16 text-center space-y-4 shadow-sm">
                 <div class="w-24 h-24 bg-stone-50 rounded-full mx-auto flex items-center justify-center text-5xl shadow-inner text-orange-600">⚽</div>
                 <h3 class="font-black uppercase tracking-tight text-xl text-zinc-900">Tactical Deployment</h3>
-                <p class="text-[11px] text-stone-400 max-w-xs mx-auto uppercase tracking-widest font-medium">Select squads from the attendance pool and tap Deploy Teams.</p>
+                <p class="text-[11px] text-stone-400 max-w-xs mx-auto uppercase tracking-widest font-medium">Select squads and tap Deploy Teams for analysis.</p>
             </div>
 
             <div id="match-results" class="hidden space-y-8 animate-pop pb-20">
@@ -130,7 +130,7 @@
                     <div class="flex justify-between items-center mb-6 px-2">
                         <h3 class="text-xs font-black uppercase tracking-widest text-zinc-400">Tactical Pitch (8-a-side)</h3>
                         <div class="flex gap-2">
-                             <button onclick="window.downloadCanvas()" class="text-[10px] font-black bg-stone-100 text-stone-600 px-5 py-2.5 rounded-full hover:bg-stone-200 transition-all">📥 PNG</button>
+                             <button onclick="window.downloadCanvas()" class="text-[10px] font-black bg-stone-100 text-stone-600 px-5 py-2.5 rounded-full uppercase tracking-widest hover:bg-stone-200 transition-all">📥 PNG</button>
                             <button onclick="window.generateStrategicInsights()" class="bg-zinc-900 text-white text-[10px] font-black px-6 py-2.5 rounded-full uppercase tracking-widest hover:bg-orange-600 shadow-xl transition-all">✨ AI Scout</button>
                         </div>
                     </div>
@@ -148,18 +148,18 @@
                     </div>
                 </div>
 
-                <button onclick="window.shareTeamsToWA()" class="wa-brand w-full py-6 rounded-3xl text-xs font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3">
+                <button onclick="window.shareTeamsToWA()" class="wa-brand w-full py-6 rounded-3xl text-xs font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">
                     💬 Share Composition to WhatsApp
                 </button>
 
                 <!-- POST GAME LOGGING -->
                 <div class="bg-white rounded-3xl border border-stone-200 p-8 shadow-xl space-y-6">
-                    <h3 class="font-black uppercase text-xs tracking-widest text-zinc-400 text-center">Post-Match Report</h3>
+                    <h3 class="font-black uppercase text-xs tracking-widest text-zinc-400 text-center">Post-Match Analysis</h3>
                     <div class="grid grid-cols-2 gap-8 text-center">
                         <div class="space-y-2"><p class="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Black Score</p><input type="number" id="score-black" class="w-full text-4xl font-black text-center bg-stone-50 border-stone-200 rounded-2xl py-4" value="0"></div>
                         <div class="space-y-2"><p class="text-[10px] font-black uppercase text-zinc-400 tracking-widest text-orange-600">Orange Score</p><input type="number" id="score-orange" class="w-full text-4xl font-black text-center bg-stone-50 border-stone-200 rounded-2xl py-4" value="0"></div>
                     </div>
-                    <button onclick="window.logMatchResult()" class="btn-primary py-5 uppercase text-xs tracking-widest">Submit Results & Nominate MVP</button>
+                    <button onclick="window.logMatchResult()" class="btn-primary py-5 uppercase text-xs tracking-widest">Submit Results, Scorers & MVP</button>
                 </div>
             </div>
         </section>
@@ -171,7 +171,7 @@
                 <h2 class="text-3xl font-black uppercase tracking-tighter italic text-white">Season History</h2>
                 <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Tracking Seasonal Records</p>
             </div>
-            <div id="games-list" class="space-y-4"></div>
+            <div id="games-list" class="space-y-6"></div>
         </section>
 
         <!-- VIEW: REGISTRY -->
@@ -179,7 +179,7 @@
             <div class="bg-zinc-900 rounded-[2.5rem] p-10 text-white text-center shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-2 bg-orange-600"></div>
                 <h2 class="text-3xl font-black uppercase tracking-tighter italic text-white">Squad Registry</h2>
-                <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Manage Official Profiles</p>
+                <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Official Maverick Performance Hub</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -189,25 +189,31 @@
                         <form id="reg-form" class="space-y-5">
                             <input type="text" id="reg-name" required placeholder="Full Name" class="form-input">
                             <select id="reg-age" required class="form-input font-bold appearance-none">
-                                <option value="21-25">Age 21-25</option><option value="26-30">Age 26-30</option><option value="31-35">Age 31-35</option><option value="36-40">Age 36-40</option><option value="41-45">Age 41-45</option><option value="50+">Age 50+</option>
+                                <option value="21-25">Age 21-25</option>
+                                <option value="26-30">Age 26-30</option>
+                                <option value="31-35">Age 31-35</option>
+                                <option value="36-40">Age 36-40</option>
+                                <option value="41-45">Age 41-45</option>
+                                <option value="46-50">Age 46-50</option>
+                                <option value="50+">Age 50+</option>
                             </select>
                             <div class="grid grid-cols-2 gap-3">
                                 <select id="reg-pos1" required class="form-input font-bold appearance-none"><option value="" disabled selected>Primary</option><option value="Forward">Forward</option><option value="Midfield">Midfield</option><option value="Defense">Defense</option><option value="GK">Goalie</option></select>
                                 <select id="reg-pos2" class="form-input font-bold appearance-none"><option value="None">Secondary</option><option value="Forward">Forward</option><option value="Midfield">Midfield</option><option value="Defense">Defense</option><option value="GK">Goalie</option></select>
                             </div>
                             <div class="space-y-6 pt-4 border-t border-stone-100">
-                                <div class="flex justify-between text-[11px] font-black uppercase text-zinc-400"><span>Skill: <span id="s-val" class="text-orange-600">5</span></span><span>Agility: <span id="a-val" class="text-orange-600">5</span></span></div>
+                                <div class="flex justify-between text-[11px] font-black uppercase text-zinc-400"><span>Self Skill: <span id="s-val" class="text-orange-600">5</span></span><span>Self Agility: <span id="a-val" class="text-orange-600">5</span></span></div>
                                 <input type="range" id="reg-skill" min="1" max="10" value="5" class="w-full h-2.5 bg-stone-100 rounded-lg appearance-none" oninput="document.getElementById('s-val').innerText=this.value"><input type="range" id="reg-agility" min="1" max="10" value="5" class="w-full h-2.5 bg-stone-100 rounded-lg appearance-none" oninput="document.getElementById('a-val').innerText=this.value">
                             </div>
-                            <button type="submit" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Append Profile</button>
+                            <button type="submit" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Create Profile</button>
                         </form>
                     </div>
                 </div>
                 <div class="lg:col-span-2">
                     <div class="bg-white rounded-[2rem] border border-stone-200 overflow-hidden shadow-xl flex flex-col min-h-[600px]">
                         <div class="p-8 border-b border-stone-100 bg-stone-50/30 flex flex-col sm:flex-row justify-between items-center gap-4">
-                            <h3 class="font-black uppercase text-xs tracking-widest text-zinc-400 tracking-tighter">Registry Database</h3>
-                            <input type="text" id="repo-search" oninput="window.filterRepo()" placeholder="Search Maverick..." class="text-xs px-6 py-3 border-2 border-stone-100 rounded-full w-full sm:w-56 bg-white outline-none focus:border-orange-500 transition-all">
+                            <h3 class="font-black uppercase text-xs tracking-widest text-zinc-400 tracking-tighter">Maverick Roster</h3>
+                            <input type="text" id="repo-search" oninput="window.filterRepo()" placeholder="Search profiles..." class="text-xs px-6 py-3 border-2 border-stone-100 rounded-full w-full sm:w-56 bg-white outline-none focus:border-orange-500 transition-all">
                         </div>
                         <div id="repo-list" class="divide-y divide-stone-50 overflow-y-auto custom-scrollbar flex-grow"></div>
                     </div>
@@ -224,15 +230,15 @@
                 <div><p class="text-[11px] font-black uppercase text-zinc-400 mb-2">Skill Rating: <span id="peer-s-val" class="text-orange-600">5</span></p><input type="range" id="peer-skill" min="1" max="10" value="5" class="w-full h-2.5 bg-stone-100 rounded-lg" oninput="document.getElementById('peer-s-val').innerText=this.value"></div>
                 <div><p class="text-[11px] font-black uppercase text-zinc-400 mb-2">Agility Rating: <span id="peer-a-val" class="text-orange-600">5</span></p><input type="range" id="peer-agility" min="1" max="10" value="5" class="w-full h-2.5 bg-stone-100 rounded-lg" oninput="document.getElementById('peer-a-val').innerText=this.value"></div>
             </div>
-            <div class="flex flex-col gap-3 pt-4"><button id="submit-rating-btn" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-xl">Submit Rating</button><button onclick="window.closeModals()" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest">Cancel</button></div>
+            <div class="flex flex-col gap-3 pt-4"><button id="submit-rating-btn" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-xl">Submit Anonymous Rating</button><button onclick="window.closeModals()" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest">Cancel</button></div>
         </div>
     </div>
 
     <div id="stats-modal" class="setup-overlay">
         <div class="setup-card space-y-6 animate-pop max-h-[85vh] flex flex-col">
-            <div><h2 class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Final Stats</h2><p class="text-[10px] text-stone-400 uppercase font-bold tracking-widest">Goals & Match MVP Nomination</p></div>
+            <div><h2 class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Match Summary</h2><p class="text-[10px] text-stone-400 uppercase font-bold tracking-widest">Log player contributions and nominate MVP</p></div>
             <div id="stats-inputs" class="space-y-4 overflow-y-auto custom-scrollbar flex-grow pr-2"></div>
-            <div class="flex flex-col gap-3 pt-4 border-t border-stone-100"><button onclick="window.saveStatsAndClose()" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Confirm Official stats</button><button onclick="window.closeModals()" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest">Go Back</button></div>
+            <div class="flex flex-col gap-3 pt-4 border-t border-stone-100"><button onclick="window.saveStatsAndClose()" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Confirm Season Record</button><button onclick="window.closeModals()" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest">Go Back</button></div>
         </div>
     </div>
 
@@ -248,15 +254,15 @@
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // CONFIG & ATTACHMENT
-        const appId = 'themavericks-v34-whatsapp';
+        // CONFIG
+        const appId = 'themavericks-v37-full-analysis';
         const apiKey = ""; 
         const MAV_CORE_CONFIG = { apiKey: "AIzaSyDeNArp-H56oEU5jvW3C66z1etnqvo1xIM", authDomain: "themavericks-837d5.firebaseapp.com", databaseURL: "https://themavericks-837d5-default-rtdb.firebaseio.com", projectId: "themavericks-837d5", storageBucket: "themavericks-837d5.firebasestorage.app", messagingSenderId: "275607550878", appId: "1:275607550878:web:a9747b68d46ae2204b748f", measurementId: "G-CW82846YN0" };
 
         let db, auth, user, currentMVP = null;
         let repository = [], guests = [], attendingIds = new Set(), currentTeams = { black: [], orange: [] }, games = [];
 
-        // UI ATTACHMENTS (Prevents ReferenceError)
+        // UI ATTACHMENTS
         window.setView = (view) => {
             document.getElementById('view-match').classList.toggle('hidden', view !== 'match');
             document.getElementById('view-records').classList.toggle('hidden', view !== 'records');
@@ -345,11 +351,18 @@
                 a: div.querySelector('.assist-input').value
             }));
             
+            const bScore = parseInt(document.getElementById('score-black').value);
+            const oScore = parseInt(document.getElementById('score-orange').value);
+            const winnerName = bScore > oScore ? "TEAM BLACK" : (oScore > bScore ? "TEAM ORANGE" : "DRAW");
+            const winningPlayers = bScore > oScore ? currentTeams.black.map(p => p.name) : (oScore > bScore ? currentTeams.orange.map(p => p.name) : []);
+
             const matchData = {
                 ts: Date.now(),
                 date: new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }),
-                scoreBlack: document.getElementById('score-black').value,
-                scoreOrange: document.getElementById('score-orange').value,
+                scoreBlack: bScore,
+                scoreOrange: oScore,
+                winner: winnerName,
+                winnerSquad: winningPlayers,
                 rosterBlack: currentTeams.black.map(p => p.name),
                 rosterOrange: currentTeams.orange.map(p => p.name),
                 playerStats: players,
@@ -369,7 +382,7 @@
         window.shareTeamsToWA = () => {
             const b = currentTeams.black.map(p => `• ${p.name}`).join('%0A');
             const o = currentTeams.orange.map(p => `• ${p.name}`).join('%0A');
-            const msg = `*THE MAVERICKS MATCH DAY*%0A%0A*TEAM BLACK:*%0A${b}%0A%0A*TEAM ORANGE:*%0A${o}%0A%0A_Generated via Mavericks Squad Manager_`;
+            const msg = `*THE MAVERICKS MATCH DAY*%0A%0A*TEAM BLACK:*%0A${b}%0A%0A*TEAM ORANGE:*%0A${o}%0A%0A_Generated via blacbold.github.io/TheMavericks_`;
             window.open(`https://wa.me/?text=${msg}`, '_blank');
         };
 
@@ -377,34 +390,35 @@
             const g = games.find(x => x.id === gameId);
             if (!g) return;
             const scorers = (g.playerStats || []).filter(p => parseInt(p.g) > 0).map(p => `${p.name} (${p.g})`).join(', ');
-            const msg = `*THE MAVERICKS POST-MATCH REPORT*%0A%0A*${g.date}*%0A*RESULT:* BLACK ${g.scoreBlack} - ${g.scoreOrange} ORANGE%0A%0A*MVP:* ${g.mvpName}%0A${scorers ? `*SCORERS:* ${scorers}` : ''}%0A%0A_Official League Record_`;
+            const winSquad = g.winnerSquad && g.winnerSquad.length > 0 ? `%0A*WINNING SQUAD:* ${g.winnerSquad.join(', ')}` : '';
+            const msg = `*THE MAVERICKS POST-MATCH REPORT*%0A%0A*${g.date}*%0A*FINAL:* BLACK ${g.scoreBlack} - ${g.scoreOrange} ORANGE%0A*WINNER:* ${g.winner}${winSquad}%0A%0A*MVP:* ${g.mvpName}%0A${scorers ? `*SCORERS:* ${scorers}` : ''}%0A%0A_Official Season Record_`;
             window.open(`https://wa.me/?text=${msg}`, '_blank');
         };
 
         // INITIALIZATION
         async function init() {
             try {
-                const appInstance = initializeApp(firebaseConfig);
+                const appInstance = initializeApp(MAV_CORE_CONFIG);
                 auth = getAuth(appInstance);
                 db = getFirestore(appInstance);
 
                 const performSignIn = async () => {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        try { return await signInWithCustomToken(auth, __initial_auth_token); } catch(e) { console.warn("Mismatched."); }
+                        try { return await signInWithCustomToken(auth, __initial_auth_token); } catch (e) { console.warn("Fallback to anon."); }
                     }
                     return await signInAnonymously(auth);
                 };
 
-                await performSignIn();
-
-                onAuthStateChanged(auth, (u) => {
-                    user = u;
-                    if (user) {
-                        document.getElementById('sync-chip').innerText = "Synced";
-                        document.getElementById('sync-chip').className = "text-[9px] font-black uppercase bg-emerald-50 px-4 py-2 rounded-full text-emerald-600 border-2 border-emerald-100 shadow-sm";
-                        document.getElementById('status-debug').innerText = `ID: ${user.uid.substring(0,8)}`;
-                        startSyncing();
-                    }
+                performSignIn().then(() => {
+                    onAuthStateChanged(auth, (u) => {
+                        user = u;
+                        if (user) {
+                            document.getElementById('sync-chip').innerText = "Synced";
+                            document.getElementById('sync-chip').className = "text-[9px] font-black uppercase bg-emerald-50 px-4 py-2 rounded-full text-emerald-600 border-2 border-emerald-100 shadow-sm";
+                            document.getElementById('status-debug').innerText = `ID: ${user.uid.substring(0,8)}`;
+                            startSyncing();
+                        }
+                    });
                 });
             } catch (err) { document.getElementById('sync-chip').innerText = "Offline"; }
         }
@@ -425,7 +439,7 @@
                 renderAttendance();
                 renderRepoListUI(repository);
             }, (err) => {
-                if (err.code === 'permission-denied') document.getElementById('status-debug').innerText = "Check Rules Mode";
+                if (err.code === 'permission-denied') document.getElementById('status-debug').innerText = "Firestore Denied";
             });
 
             onSnapshot(query(gamesPath), (snapshot) => {
@@ -439,7 +453,7 @@
             const peerR = p.peerRatings || [];
             let avgS = peerR.length > 0 ? peerR.reduce((a,b)=>a+parseInt(b.s),0)/peerR.length : 5;
             let avgA = peerR.length > 0 ? peerR.reduce((a,b)=>a+parseInt(b.a),0)/peerR.length : 5;
-            const ageWeights = { "21-25": 1.1, "26-30": 1.05, "31-35": 1.0, "36-40": 0.95, "41-45": 0.9, "50+": 0.85 };
+            const ageWeights = { "21-25": 1.1, "26-30": 1.05, "31-35": 1.0, "36-40": 0.95, "41-45": 0.9, "46-50": 0.88, "50+": 0.85 };
             return ((self * 0.4) + ((avgS + avgA) * 0.6)) * (ageWeights[p.ageGroup] || 1.0);
         }
 
@@ -447,7 +461,7 @@
 
         function renderGamesList() {
             const list = document.getElementById('games-list');
-            if (games.length === 0) { list.innerHTML = '<div class="py-20 text-center text-stone-300 italic text-sm">No match history found.</div>'; return; }
+            if (games.length === 0) { list.innerHTML = '<div class="py-20 text-center text-stone-300 italic text-sm">No historical records found.</div>'; return; }
             list.innerHTML = '';
             games.forEach(g => {
                 const scorers = (g.playerStats || []).filter(p => parseInt(p.g) > 0).map(p => `${p.name} (${p.g})`).join(', ');
@@ -458,7 +472,7 @@
                         <span class="text-[10px] font-black uppercase text-stone-400 tracking-widest">${g.date}</span>
                         <div class="flex gap-2">
                             ${g.mvpName !== "N/A" ? `<span class="text-[8px] font-black uppercase text-yellow-600 bg-yellow-50 px-2 py-1 rounded border border-yellow-200">★ MVP: ${g.mvpName}</span>` : ''}
-                            <span class="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">Official</span>
+                            <span class="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">${g.winner}</span>
                         </div>
                     </div>
                     <div class="flex items-center justify-around py-4">
@@ -467,8 +481,11 @@
                         <div class="text-center"><p class="text-[9px] font-black text-orange-600 uppercase">Orange</p><p class="text-4xl font-black text-orange-600">${g.scoreOrange}</p></div>
                     </div>
                     <div class="space-y-4">
-                        ${scorers ? `<div class="p-3 bg-stone-50 rounded-xl"><p class="text-[8px] font-black text-stone-400 uppercase tracking-widest mb-1">Goal Scorers</p><p class="text-[10px] font-bold text-zinc-800 uppercase">${scorers}</p></div>` : ''}
-                        <button onclick="window.shareReportToWA('${g.id}')" class="w-full wa-brand py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest">Share Match Report</button>
+                        <div class="grid grid-cols-1 gap-2">
+                            ${scorers ? `<div class="p-3 bg-stone-50 rounded-xl"><p class="text-[8px] font-black text-stone-400 uppercase tracking-widest mb-1">Goal Scorers</p><p class="text-[10px] font-bold text-zinc-800 uppercase">${scorers}</p></div>` : ''}
+                            ${g.winnerSquad && g.winnerSquad.length > 0 ? `<div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100"><p class="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Winning Mavericks</p><p class="text-[10px] font-bold text-emerald-800 uppercase italic">${g.winnerSquad.join(', ')}</p></div>` : ''}
+                        </div>
+                        <button onclick="window.shareReportToWA('${g.id}')" class="w-full wa-brand py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-md">Share Analysis to WhatsApp</button>
                     </div>`;
                 list.appendChild(item);
             });
@@ -508,7 +525,7 @@
                             <button onclick="window.openRatingModal('${p.id}')" class="px-5 py-2 bg-zinc-100 text-zinc-600 text-[10px] font-black uppercase rounded-full hover:bg-zinc-200 transition-colors">Rate</button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2"><button onclick="window.generatePlayerBio('${p.id}')" class="text-[9px] font-black uppercase text-orange-600 border border-orange-100 bg-orange-50 px-3 py-1.5 rounded transition-all">✨ AI Scout</button></div>
+                    <div class="flex items-center gap-2"><button onclick="window.generatePlayerBio('${p.id}')" class="text-[9px] font-black uppercase text-orange-600 border border-orange-100 bg-orange-50 px-3 py-1.5 rounded transition-all">✨ Scouting Bio</button></div>
                     <div id="bio-${p.id}"></div>`;
                 list.appendChild(div);
             });
@@ -548,7 +565,19 @@
             drawTeam(tb, true); drawTeam(to, false);
         }
 
-        window.downloadCanvas = () => { const c = document.getElementById('pitchCanvas'); const l = document.createElement('a'); l.download = "Mavericks_Tactics.png"; l.href = c.toDataURL('image/png'); l.click(); };
+        window.generatePlayerBio = async (id) => {
+            const p = repository.find(x => x.id === id);
+            const area = document.getElementById(`bio-${id}`);
+            area.innerHTML = '<div class="h-4 w-full shimmer rounded-full mt-2"></div>';
+            const prompt = `Write a gritty 1-sentence scout profile for Maverick ${p.name}. Age: ${p.ageGroup}, Role: ${p.posPrimary}, Rating: ${getTruePower(p).toFixed(1)}. Focus on their tactical contribution. Professional tone.`;
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+                const d = await r.json();
+                area.innerHTML = `<p class="text-[10px] italic text-orange-600 font-medium mt-2 leading-relaxed">✨ ${d.candidates?.[0]?.content?.parts?.[0]?.text}</p>`;
+            } catch (e) { area.innerHTML = "Offline bio."; }
+        };
+
+        window.downloadCanvas = () => { const c = document.getElementById('pitchCanvas'); const l = document.createElement('a'); l.download = "Mavericks_Match.png"; l.href = c.toDataURL('image/png'); l.click(); };
 
         document.getElementById('reg-form').onsubmit = async (e) => {
             e.preventDefault();
