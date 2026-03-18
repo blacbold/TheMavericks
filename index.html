@@ -12,15 +12,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- 
-    Architectural Plan:
-    - Robust initialization sequence with live error reporting.
-    - Specialized domain trust diagnostics for GitHub Pages.
-    - 8-a-side Tactical Engine (1-2-3-2 mapping) with high-contrast labels.
-    - Cloud Sync for Squad Registry and Attendance.
-    - AI Scouting Report using Gemini 2.5 Flash.
-    -->
-
     <style>
         :root { --mav-orange: #ea580c; --mav-black: #1b1b1f; --pitch-green: #15803d; }
         body { -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, sans-serif; background-color: #f8fafc; }
@@ -52,39 +43,24 @@
 </head>
 <body class="text-zinc-900 min-h-screen pb-32">
 
-    <!-- Diagnostic & Setup Overlay -->
+    <!-- Connection Overlay (Only shown if hardcoded config fails) -->
     <div id="setup-overlay" class="setup-overlay">
         <div class="setup-card space-y-6 animate-pop">
             <div class="flex items-center gap-4">
                 <img src="Untitled design (1).png" class="h-12 w-auto" alt="Mavericks Logo">
-                <h2 class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Connection Link</h2>
+                <h2 class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Cloud Link</h2>
             </div>
             
-            <div id="setup-error-box" class="hidden bg-red-50 p-5 rounded-2xl border border-red-100 space-y-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-lg">❌</span>
-                    <p class="text-[10px] text-red-600 font-black uppercase tracking-widest">Active Error Identified</p>
-                </div>
-                <p id="setup-error-msg" class="text-xs text-red-700 font-bold leading-relaxed"></p>
-                <div id="domain-fix" class="hidden pt-2 border-t border-red-200">
-                    <p class="text-[10px] text-red-600 uppercase font-black">How to fix this:</p>
-                    <p class="text-[11px] text-red-700 mt-1">Go to Firebase Console &gt; Authentication &gt; Settings &gt; Authorized Domains and add <strong>blacbold.github.io</strong></p>
-                </div>
+            <div id="setup-error-box" class="bg-red-50 p-5 rounded-2xl border border-red-100 space-y-3">
+                <p class="text-[10px] text-red-600 font-black uppercase tracking-widest">Connection Error:</p>
+                <p id="setup-error-msg" class="text-xs text-red-700 font-bold leading-relaxed">Automatic connection to TheMavericks database failed.</p>
+                <p class="text-[11px] text-red-700">Ensure <strong>blacbold.github.io</strong> is added to "Authorized Domains" in Firebase Auth settings.</p>
             </div>
 
-            <div class="bg-indigo-50 p-5 rounded-2xl space-y-2 border border-indigo-100">
-                <p class="text-[10px] text-indigo-700 font-black uppercase tracking-widest">Quick Checklist:</p>
-                <ul class="text-[11px] text-indigo-900 space-y-1 font-medium">
-                    <li>• Enable <strong>Anonymous</strong> in Firebase Auth.</li>
-                    <li>• Set Firestore Database to <strong>Test Mode</strong>.</li>
-                    <li>• Ensure domain <strong>blacbold.github.io</strong> is authorized.</li>
-                </ul>
-            </div>
-
-            <textarea id="config-input" rows="6" placeholder='Paste your firebaseConfig here...' class="w-full text-[11px] font-mono bg-stone-50 border-2 border-stone-100 rounded-2xl p-5 focus:ring-4 focus:ring-orange-100 outline-none transition-all"></textarea>
+            <textarea id="config-input" rows="4" placeholder='Update config here if needed...' class="w-full text-[11px] font-mono bg-stone-50 border-2 border-stone-100 rounded-2xl p-5 outline-none"></textarea>
             
             <div class="flex flex-col gap-3">
-                <button onclick="saveManualConfig()" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Connect Database</button>
+                <button onclick="saveManualConfig()" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Retry Connection</button>
                 <button onclick="document.getElementById('setup-overlay').style.display='none'" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest text-center">Work Offline</button>
             </div>
         </div>
@@ -98,13 +74,13 @@
                 <div id="logo-text" class="hidden font-black uppercase tracking-tighter text-xl text-zinc-900">The Mavericks</div>
             </div>
             <div class="flex flex-col items-end">
-                <button onclick="toggleSetup()" id="sync-chip" class="text-[9px] font-black uppercase bg-amber-50 px-4 py-2 rounded-full text-amber-600 border-2 border-amber-100 shadow-sm transition-all hover:scale-105 active:scale-95">Connecting...</button>
-                <button id="troubleshoot-link" onclick="toggleSetup()" class="hidden text-[8px] font-black text-red-500 uppercase underline mt-1 animate-pulse">Fix Connection</button>
+                <button id="sync-chip" class="text-[9px] font-black uppercase bg-amber-50 px-4 py-2 rounded-full text-amber-600 border-2 border-amber-100 shadow-sm transition-all">Connecting...</button>
+                <button id="troubleshoot-link" onclick="toggleSetup()" class="hidden text-[8px] font-black text-red-500 uppercase underline mt-1">Fix Connection</button>
             </div>
         </div>
         <nav class="flex max-w-4xl mx-auto border-t border-stone-100 bg-white">
-            <button onclick="setView('match')" id="nav-match" class="flex-1 py-5 text-xs font-black uppercase tracking-widest tab-active">Match Day</button>
-            <button onclick="setView('registry')" id="nav-registry" class="flex-1 py-5 text-xs font-black uppercase tracking-widest text-stone-400">Squad Registry</button>
+            <button onclick="setView('match')" id="nav-match" class="flex-1 py-5 text-xs font-black uppercase tracking-widest tab-active transition-all">Match Day</button>
+            <button onclick="setView('registry')" id="nav-registry" class="flex-1 py-5 text-xs font-black uppercase tracking-widest text-stone-400 transition-all">Squad Registry</button>
         </nav>
     </header>
 
@@ -116,7 +92,7 @@
                 <div class="flex justify-between items-start mb-8">
                     <div>
                         <h2 class="font-black uppercase text-xs tracking-widest text-zinc-400">Match Day Selection</h2>
-                        <p class="text-sm text-stone-500 mt-1 font-medium">Toggle confirmed players at the pitch.</p>
+                        <p class="text-sm text-stone-500 mt-1 font-medium">Toggle confirm players at the field.</p>
                     </div>
                     <div class="text-right bg-stone-50 px-5 py-3 rounded-2xl border border-stone-100 shadow-inner">
                         <span id="attending-count" class="text-5xl font-black text-orange-600 leading-none">0</span>
@@ -124,11 +100,11 @@
                 </div>
                 
                 <div id="attendance-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2 mb-8">
-                    <div class="col-span-full py-20 text-center text-stone-300 italic text-sm">Searching cloud registry...</div>
+                    <div class="col-span-full py-20 text-center text-stone-300 italic text-sm">Synchronizing with Cloud...</div>
                 </div>
 
                 <div class="mt-10 pt-8 border-t-2 border-dashed border-stone-100 space-y-5">
-                    <h3 class="text-[11px] font-black uppercase tracking-widest text-zinc-900">Add Guest</h3>
+                    <h3 class="text-[11px] font-black uppercase tracking-widest text-zinc-900">Quick Guest Add</h3>
                     <div class="flex flex-col gap-3">
                         <input type="text" id="guest-name" placeholder="Full Name" class="w-full bg-stone-50 border-2 border-stone-100 rounded-2xl px-5 py-4 text-sm focus:ring-4 focus:ring-orange-100 outline-none transition-all">
                         <div class="flex gap-3">
@@ -141,23 +117,20 @@
                 </div>
             </div>
 
-            <!-- STATUS PLACEHOLDER -->
             <div id="match-welcome" class="bg-white rounded-3xl border border-stone-200 p-16 text-center space-y-4 shadow-sm">
                 <div class="w-24 h-24 bg-stone-50 rounded-full mx-auto flex items-center justify-center text-5xl shadow-inner text-orange-600">⚽</div>
                 <h3 class="font-black uppercase tracking-tight text-xl">The Mavericks HQ</h3>
-                <p class="text-[11px] text-stone-400 max-w-xs mx-auto uppercase tracking-widest font-medium">Select your squad and deploy match teams.</p>
+                <p class="text-[11px] text-stone-400 max-w-xs mx-auto uppercase tracking-widest font-medium">Select your squad and deploy.</p>
             </div>
 
-            <!-- TACTICS & RESULTS -->
             <div id="match-results" class="hidden space-y-8 animate-pop pb-20">
-                <!-- AI Scouting Insights -->
                 <div id="ai-insights-container" class="hidden bg-white rounded-[2rem] border border-orange-100 p-8 shadow-2xl border-l-[12px] border-l-orange-500">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
                             <span class="text-3xl">✨</span>
                             <h3 class="font-black uppercase text-xs tracking-widest text-orange-600">Coach Gemini Scouting</h3>
                         </div>
-                        <button onclick="generateStrategicInsights()" class="text-[10px] font-black uppercase text-stone-400 hover:text-orange-600">↻ Refresh</button>
+                        <button onclick="generateStrategicInsights()" class="text-[10px] font-black uppercase text-stone-400">↻ Refresh</button>
                     </div>
                     <div id="ai-content">
                         <div id="ai-loading" class="hidden space-y-4">
@@ -168,13 +141,12 @@
                     </div>
                 </div>
 
-                <!-- Tactical Pitch -->
                 <div class="bg-white rounded-[2.5rem] shadow-2xl border border-stone-200 p-5">
                     <div class="flex justify-between items-center mb-6 px-2">
-                        <h3 class="text-xs font-black uppercase tracking-widest text-zinc-400">8-a-side Tactics</h3>
+                        <h3 class="text-xs font-black uppercase tracking-widest text-zinc-400">Tactical Pitch (8-a-side)</h3>
                         <div class="flex gap-2">
-                             <button onclick="downloadCanvas()" class="text-[10px] font-black bg-stone-100 text-stone-600 px-5 py-2.5 rounded-full uppercase tracking-widest hover:bg-stone-200 transition-all">📥 PNG</button>
-                            <button onclick="generateStrategicInsights()" class="bg-zinc-900 text-white text-[10px] font-black px-6 py-2.5 rounded-full uppercase tracking-widest hover:bg-orange-600 shadow-xl transition-all">✨ AI Scout</button>
+                             <button onclick="downloadCanvas()" class="text-[10px] font-black bg-stone-100 text-stone-600 px-4 py-2 rounded-full uppercase tracking-widest hover:bg-stone-200">📥 PNG</button>
+                            <button onclick="generateStrategicInsights()" class="bg-zinc-900 text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest hover:bg-orange-600 shadow-xl">✨ AI Scout</button>
                         </div>
                     </div>
                     <div class="pitch-container">
@@ -182,21 +154,20 @@
                     </div>
                 </div>
 
-                <!-- Team Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div class="bg-zinc-900 rounded-[2rem] overflow-hidden shadow-2xl border-2 border-black">
+                    <div class="bg-zinc-900 rounded-[2rem] overflow-hidden shadow-2xl">
                         <div class="bg-black px-8 py-6 flex justify-between items-center">
                             <h4 class="text-white font-black italic uppercase text-sm tracking-widest">Team Black</h4>
                             <span id="pwr-black" class="text-[10px] font-black text-zinc-500">PWR: 0</span>
                         </div>
-                        <div id="list-black" class="p-6 space-y-3 min-h-[140px]"></div>
+                        <div id="list-black" class="p-6 space-y-3"></div>
                     </div>
-                    <div class="bg-orange-600 rounded-[2rem] overflow-hidden shadow-2xl border-2 border-orange-700">
+                    <div class="bg-orange-600 rounded-[2rem] overflow-hidden shadow-2xl">
                         <div class="bg-orange-700 px-8 py-6 flex justify-between items-center">
                             <h4 class="text-white font-black italic uppercase text-sm tracking-widest">Team Orange</h4>
                             <span id="pwr-orange" class="text-[10px] font-black text-orange-900">PWR: 0</span>
                         </div>
-                        <div id="list-orange" class="p-6 space-y-3 min-h-[140px]"></div>
+                        <div id="list-orange" class="p-6 space-y-3"></div>
                     </div>
                 </div>
 
@@ -235,7 +206,7 @@
                 <div class="lg:col-span-2">
                     <div class="bg-white rounded-[2rem] border border-stone-200 overflow-hidden shadow-xl flex flex-col min-h-[600px]">
                         <div class="p-8 border-b border-stone-100 bg-stone-50/30 flex justify-between items-center">
-                            <h3 class="font-black uppercase text-xs tracking-widest text-zinc-400 tracking-tighter">Database Records</h3>
+                            <h3 class="font-black uppercase text-xs tracking-widest text-zinc-400 tracking-tighter">Active Registry</h3>
                             <input type="text" id="repo-search" oninput="filterRepo()" placeholder="Filter profiles..." class="text-xs px-6 py-3 border-2 border-stone-100 rounded-full w-56 bg-white outline-none focus:border-orange-500 transition-all">
                         </div>
                         <div id="repo-list" class="divide-y divide-stone-50 overflow-y-auto custom-scrollbar flex-grow"></div>
@@ -248,7 +219,7 @@
     <div id="action-bar" class="fixed bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-xl border-t border-stone-200 z-50 flex justify-center">
         <button onclick="deployTacticalSquads()" class="w-full max-w-lg btn-primary py-6 shadow-2xl group flex items-center justify-center gap-5 transition-transform active:scale-95 shadow-orange-900/10">
             <span class="text-orange-500 text-3xl font-black italic group-hover:animate-pulse">▶</span>
-            <span class="uppercase italic tracking-tighter text-xl">Deploy Match Teams</span>
+            <span class="uppercase italic tracking-tighter text-xl text-white">Deploy Match Teams</span>
         </button>
     </div>
 
@@ -258,15 +229,28 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         let db, auth;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mavericks-v25-final';
-        const apiKey = ""; // Environment key
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'themavericks-prod-v1';
+        const apiKey = ""; // Gemini
         
+        // HARDCODED CONFIGURATION - Automatically used on GitHub
+        const MAV_CORE_CONFIG = {
+            apiKey: "AIzaSyDeNArp-H56oEU5jvW3C66z1etnqvo1xIM",
+            authDomain: "themavericks-837d5.firebaseapp.com",
+            databaseURL: "https://themavericks-837d5-default-rtdb.firebaseio.com",
+            projectId: "themavericks-837d5",
+            storageBucket: "themavericks-837d5.firebasestorage.app",
+            messagingSenderId: "275607550878",
+            appId: "1:275607550878:web:a9747b68d46ae2204b748f",
+            measurementId: "G-CW82846YN0"
+        };
+
         let repository = [], filteredRepo = [], guests = [], attendingIds = new Set(), currentTeams = { black: [], orange: [] };
 
         function getFirebaseConfig() {
             if (typeof __firebase_config !== 'undefined' && __firebase_config) return JSON.parse(__firebase_config);
-            const saved = localStorage.getItem('mavericks_fb_config_diagnostic_v5');
-            return saved ? JSON.parse(saved) : null;
+            const saved = localStorage.getItem('themavericks_custom_config');
+            if (saved) return JSON.parse(saved);
+            return MAV_CORE_CONFIG; // Fallback to hardcoded
         }
 
         window.saveManualConfig = () => {
@@ -275,9 +259,9 @@
                 const start = input.indexOf('{'), end = input.lastIndexOf('}');
                 let block = input.substring(start, end + 1);
                 let cleaned = block.replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ').replace(/([{,]\s*)([a-zA-Z0-9]+?)\s*:/g, '$1"$2":').replace(/'/g, '"').replace(/,(\s*?\})/g, '}');
-                localStorage.setItem('mavericks_fb_config_diagnostic_v5', cleaned);
+                localStorage.setItem('themavericks_custom_config', cleaned);
                 location.reload();
-            } catch (e) { alert("Invalid configuration format."); }
+            } catch (e) { alert("Invalid config format."); }
         };
 
         window.toggleSetup = () => { document.getElementById('setup-overlay').style.display = 'flex'; };
@@ -285,14 +269,12 @@
         async function init() {
             const config = getFirebaseConfig();
             
-            // Watchdog for "Connecting..." hang
+            // Connection monitor
             setTimeout(() => {
                 if (document.getElementById('sync-chip').innerText === "Connecting...") {
                     document.getElementById('troubleshoot-link').classList.remove('hidden');
                 }
-            }, 5000);
-
-            if (!config) { if (!window.location.hostname.includes('scf.usercontent.goog')) document.getElementById('setup-overlay').style.display = 'flex'; return; }
+            }, 6000);
             
             try {
                 const appInstance = initializeApp(config);
@@ -305,29 +287,17 @@
                             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
                             else await signInAnonymously(auth);
                         } catch (e) {
-                             const chip = document.getElementById('sync-chip');
-                             chip.innerText = "Auth Fail";
-                             chip.className = "text-[9px] font-black uppercase bg-red-50 px-4 py-2 rounded-full text-red-600 border-2 border-red-100 shadow-sm";
-                             
+                             document.getElementById('sync-chip').innerText = "Auth Fail";
                              document.getElementById('troubleshoot-link').classList.remove('hidden');
-                             const errBox = document.getElementById('setup-error-box');
-                             errBox.classList.remove('hidden');
-                             document.getElementById('setup-error-msg').innerText = e.message;
-                             if(e.message.includes('auth/unauthorized-domain')) {
-                                 document.getElementById('domain-fix').classList.remove('hidden');
-                             }
+                             document.getElementById('setup-overlay').style.display = 'flex';
                         }
                     } else {
-                        const chip = document.getElementById('sync-chip');
-                        chip.innerText = "Synced";
-                        chip.className = "text-[9px] font-black uppercase bg-emerald-50 px-4 py-2 rounded-full text-emerald-600 border-2 border-emerald-100 shadow-sm";
+                        document.getElementById('sync-chip').innerText = "Synced";
+                        document.getElementById('sync-chip').className = "text-[9px] font-black uppercase bg-emerald-50 px-4 py-2 rounded-full text-emerald-600 border-2 border-emerald-100 shadow-sm";
                         syncRegistry();
                     }
                 });
-            } catch (err) { 
-                document.getElementById('sync-chip').innerText = "Offline"; 
-                document.getElementById('troubleshoot-link').classList.remove('hidden');
-            }
+            } catch (err) { document.getElementById('sync-chip').innerText = "Offline"; }
         }
 
         function syncRegistry() {
@@ -337,9 +307,7 @@
                 renderAttendance();
                 renderRepoList();
             }, (err) => { 
-                document.getElementById('sync-chip').innerText = "Denied"; 
-                document.getElementById('setup-error-box').classList.remove('hidden');
-                document.getElementById('setup-error-msg').innerText = "Database Permission Error: Enable 'Test Mode' in Firestore Rules.";
+                document.getElementById('sync-chip').innerText = "Deny Error"; 
             });
         }
 
@@ -359,7 +327,7 @@
             btn.innerText = "Saving to Cloud..."; btn.disabled = true;
             const demo = [{ n: "Lok", p: "Defense", s: 9, a: 8 }, { n: "Vish", p: "GK", s: 9, a: 7 }, { n: "Ashwin", p: "GK", s: 9, a: 7 }, { n: "Robin", p: "Midfield", s: 8, a: 8 }, { n: "Staines", p: "Defense", s: 3, a: 5 }, { n: "Ash", p: "Midfield", s: 5, a: 8 }, { n: "Pradeep", p: "Midfield", s: 6, a: 9 }, { n: "Manu", p: "Midfield", s: 2, a: 6 }, { n: "Deb", p: "Midfield", s: 2, a: 7 }, { n: "Sandeep", p: "Midfield", s: 5, a: 8 }, { n: "Akshay", p: "Defense", s: 1, a: 5 }, { n: "Sujith", p: "Defense", s: 3, a: 4 }, { n: "Ajay", p: "Forward", s: 8, a: 7 }, { n: "Alex", p: "Forward", s: 6, a: 9 }, { n: "Subin", p: "Forward", s: 7, a: 6 }, { n: "Anoop", p: "Forward", s: 7, a: 5 }];
             for (const p of demo) await window.saveToCloud({ name: p.n, posPrimary: p.p, posSecondary: 'None', skill: p.s, agility: p.a, ageGroup: "21-25" });
-            btn.innerText = "Registry Updated!"; setTimeout(() => { btn.innerText = "Append Demo Squad (16 Mavs)"; btn.disabled = false; }, 2000);
+            btn.innerText = "Done!"; setTimeout(() => { btn.innerText = "Append Demo Squad (16 Mavs)"; btn.disabled = false; }, 2000);
         };
 
         window.deleteMav = async (id) => { if (confirm("Delete profile?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', id)); };
@@ -368,7 +336,7 @@
             const n = document.getElementById('guest-name');
             if (!n.value.trim()) return;
             const gData = { name: n.value.trim(), posPrimary: document.getElementById('guest-pos').value, posSecondary: 'None', skill: 5, agility: 5, ageGroup: 'Guest' };
-            guests.push({ ...gData, id: 'g-' + Date.now() });
+            if (document.getElementById('guest-perm').checked) await window.saveToCloud(gData); else guests.push({ ...gData, id: 'g-' + Date.now() });
             n.value = ''; renderAttendance();
         };
 
@@ -382,17 +350,17 @@
             const tb = [], to = []; let pB = 0, pO = 0;
             squad.forEach(p => { const r = parseInt(p.skill) + parseInt(p.agility); if (pB <= pO) { tb.push(p); pB += r; } else { to.push(p); pO += r; } });
             currentTeams = { black: tb, orange: to };
-            renderFinalOutput(tb, to, pB, pO);
+            renderResults(tb, to, pB, pO);
         };
 
-        function renderFinalOutput(tb, to, sb, so) {
+        function renderResults(tb, to, sb, so) {
             document.getElementById('match-welcome').classList.add('hidden');
-            const resArea = document.getElementById('match-results');
-            resArea.classList.remove('hidden'); resArea.scrollIntoView({ behavior: 'smooth' });
+            const res = document.getElementById('match-results');
+            res.classList.remove('hidden'); res.scrollIntoView({ behavior: 'smooth' });
             document.getElementById('ai-insights-container').classList.add('hidden');
             const listB = document.getElementById('list-black'), listO = document.getElementById('list-orange');
             listB.innerHTML = ''; listO.innerHTML = '';
-            const renderCard = (p, isBlack) => `<div class="p-4 rounded-2xl border ${isBlack ? 'bg-zinc-800 border-zinc-700 shadow-inner' : 'bg-orange-500 border-orange-400'} flex justify-between items-center shadow-lg"><div class="flex flex-col text-white"><span class="font-black text-xs">${p.name}</span><span class="text-[8px] opacity-60 uppercase mt-0.5">${p.posPrimary}</span></div></div>`;
+            const renderCard = (p, isB) => `<div class="p-4 rounded-2xl border ${isB ? 'bg-zinc-800 border-zinc-700 shadow-inner' : 'bg-orange-500 border-orange-400'} flex justify-between items-center shadow-lg"><div class="flex flex-col text-white"><span class="font-black text-xs">${p.name}</span><span class="text-[8px] opacity-60 uppercase mt-0.5">${p.posPrimary}</span></div></div>`;
             tb.forEach(p => listB.innerHTML += renderCard(p, true));
             to.forEach(p => listO.innerHTML += renderCard(p, false));
             document.getElementById('pwr-black').innerText = `PWR: ${sb}`; document.getElementById('pwr-orange').innerText = `PWR: ${so}`;
@@ -412,22 +380,22 @@
             ctx.strokeRect(14, 14, w-28, h-28);
             ctx.beginPath(); ctx.moveTo(w/2, 14); ctx.lineTo(w/2, h-14); ctx.stroke();
             ctx.beginPath(); ctx.arc(w/2, h/2, 38, 0, Math.PI*2); ctx.stroke();
-            const shape8 = [{ x: 0.08, y: 0.5 }, { x: 0.25, y: 0.3 }, { x: 0.25, y: 0.7 }, { x: 0.55, y: 0.2 }, { x: 0.55, y: 0.5 }, { x: 0.55, y: 0.8 }, { x: 0.85, y: 0.35 }, { x: 0.85, y: 0.65 }];
-            const drawTeam = (players, isLeft) => {
+            const s8 = [{ x: 0.08, y: 0.5 }, { x: 0.25, y: 0.3 }, { x: 0.25, y: 0.7 }, { x: 0.55, y: 0.2 }, { x: 0.55, y: 0.5 }, { x: 0.55, y: 0.8 }, { x: 0.85, y: 0.35 }, { x: 0.85, y: 0.65 }];
+            const draw = (players, isLeft) => {
                 players.forEach((p, i) => {
-                    let tx = isLeft ? (18 + (shape8[i]?.x||0.5) * (w/2 - 25)) : (w - 18 - (shape8[i]?.x||0.5) * (w/2 - 25));
-                    let ty = 18 + (shape8[i]?.y||0.5) * (h - 36);
+                    let tx = isLeft ? (18 + (s8[i]?.x||0.5) * (w/2 - 25)) : (w - 18 - (s8[i]?.x||0.5) * (w/2 - 25));
+                    let ty = 18 + (s8[i]?.y||0.5) * (h - 36);
                     ctx.beginPath(); ctx.arc(tx, ty, 11, 0, Math.PI*2); ctx.fillStyle = isLeft ? "#000" : "#f97316"; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
                     ctx.fillStyle = "#fff"; ctx.font = "bold 8px sans-serif"; ctx.textAlign = "center";
                     ctx.fillText(p.name.split(' ')[0].substring(0,2).toUpperCase(), tx, ty + 3);
                     ctx.shadowBlur = 4; ctx.shadowColor = "rgba(0,0,0,1)"; ctx.fillText(p.name.split(' ')[0].toUpperCase(), tx, ty + 22); ctx.shadowBlur = 0;
                 });
             };
-            drawTeam(tb, true); drawTeam(to, false);
+            draw(tb, true); draw(to, false);
         }
 
         window.downloadCanvas = () => { const c = document.getElementById('pitchCanvas'); const l = document.createElement('a'); l.download = "Mavericks_Match.png"; l.href = c.toDataURL('image/png'); l.click(); };
-        window.downloadRosters = () => { const text = `MAVERICKS ROSTER\n\nBLACK:\n${currentTeams.black.map(p=>`- ${p.name}`).join('\n')}\n\nORANGE:\n${currentTeams.orange.map(p=>`- ${p.name}`).join('\n')}`; const blob = new Blob([text], { type: 'text/plain' }); const link = document.createElement('a'); link.download = "Mavericks_Match.txt"; link.href = window.URL.createObjectURL(blob); link.click(); };
+        window.downloadRosters = () => { let t = `MAVERICKS ROSTER\n\nBLACK:\n${currentTeams.black.map(p=>`- ${p.name}`).join('\n')}\n\nORANGE:\n${currentTeams.orange.map(p=>`- ${p.name}`).join('\n')}`; const b = new Blob([t], { type: 'text/plain' }); const l = document.createElement('a'); l.download = "Mavericks_Teams.txt"; l.href = URL.createObjectURL(b); l.click(); };
         window.shareWhatsApp = () => { 
             let t = `*MAVERICKS MATCH DAY*%0A%0A*TEAM BLACK:*%0A${currentTeams.black.map(p=>`- ${p.name}`).join('%0A')}%0A%0A*TEAM ORANGE:*%0A${currentTeams.orange.map(p=>`- ${p.name}`).join('%0A')}`; 
             window.open(`https://wa.me/?text=${t}`, '_blank');
@@ -438,12 +406,12 @@
             const loader = document.getElementById('ai-loading');
             const output = document.getElementById('ai-output');
             container.classList.remove('hidden'); loader.classList.remove('hidden'); output.innerHTML = '';
-            const prompt = `Match Scouting Report for The Mavericks (8-a-side). Black: ${currentTeams.black.map(p=>p.name).join(', ')}. Orange: ${currentTeams.orange.map(p=>p.name).join(', ')}. Provide a 100-word tactical overview with a gritty coach tone.`;
+            const prompt = `Match Scouting Report for The Mavericks. Black vs Orange. Provide a gritty 100-word tactical overview. Black: ${currentTeams.black.map(p=>p.name).join(', ')}. Orange: ${currentTeams.orange.map(p=>p.name).join(', ')}.`;
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const d = await r.json(); loader.classList.add('hidden');
                 output.innerHTML = d.candidates?.[0]?.content?.parts?.[0]?.text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>') || "Scout offline.";
-            } catch (e) { loader.classList.add('hidden'); output.innerHTML = "Check configuration."; }
+            } catch (e) { loader.classList.add('hidden'); output.innerHTML = "Check connection."; }
         };
 
         function renderAttendance() {
@@ -474,7 +442,7 @@
             filteredRepo.sort((a,b) => b.ts - a.ts).forEach(p => {
                 const div = document.createElement('div');
                 div.className = "p-6 flex justify-between items-center transition-colors hover:bg-stone-50";
-                div.innerHTML = `<div class="flex flex-col"><span class="font-black text-sm text-zinc-800">${p.name}</span><span class="text-[10px] font-bold text-stone-400 uppercase mt-1 uppercase tracking-tighter">${p.posPrimary}</span></div><button onclick="window.deleteMav('${p.id}')" class="text-[10px] font-black text-stone-200 hover:text-red-500 uppercase transition-colors">Delete</button>`;
+                div.innerHTML = `<div class="flex flex-col"><span class="font-black text-sm text-zinc-800">${p.name}</span><span class="text-[10px] font-bold text-stone-400 mt-1 uppercase tracking-tighter">${p.posPrimary}</span></div><button onclick="window.deleteMav('${p.id}')" class="text-[10px] font-black text-stone-200 hover:text-red-500 uppercase transition-colors">Delete</button>`;
                 list.appendChild(div);
             });
         }
