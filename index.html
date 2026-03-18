@@ -35,7 +35,7 @@
         .shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
         
         .setup-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-blur: 15px; }
-        .setup-card { background: white; border-radius: 2.5rem; padding: 2.5rem; max-width: 480px; width: 100%; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.6); }
+        .setup-card { background: white; border-radius: 2rem; padding: 2.5rem; max-width: 480px; width: 100%; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.6); }
         .btn-primary { background: var(--mav-black); color: white; border-radius: 1rem; font-weight: 800; transition: all 0.2s; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 3.5rem; cursor: pointer; border: none; }
         .btn-primary:active { transform: scale(0.96); }
         
@@ -49,6 +49,9 @@
         .form-input:focus { border-color: var(--mav-orange); background: white; box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1); }
         
         .mvp-btn.active { color: #facc15; transform: scale(1.1); font-weight: 900; border-color: #facc15; }
+        
+        .star-rating { color: #d1d5db; cursor: pointer; transition: color 0.2s; font-size: 1.5rem; }
+        .star-rating.active { color: #facc15; }
     </style>
 </head>
 <body class="text-zinc-900 min-h-screen pb-32">
@@ -242,6 +245,27 @@
         </div>
     </div>
 
+    <!-- MVP Performance Rating Modal -->
+    <div id="mvp-rating-modal" class="setup-overlay">
+        <div class="setup-card space-y-6 animate-pop">
+            <div>
+                <h2 class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Rate MVP</h2>
+                <p id="mvp-rating-name" class="text-xs text-orange-600 font-bold uppercase tracking-widest mt-1"></p>
+            </div>
+            <div class="flex justify-center gap-2 py-4">
+                <span class="star-rating" data-val="1">★</span>
+                <span class="star-rating" data-val="2">★</span>
+                <span class="star-rating" data-val="3">★</span>
+                <span class="star-rating" data-val="4">★</span>
+                <span class="star-rating" data-val="5">★</span>
+            </div>
+            <div class="flex flex-col gap-3 pt-4">
+                <button id="submit-mvp-rate-btn" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-xl">Confirm Stars</button>
+                <button onclick="window.closeModals()" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
     <div id="action-bar" class="fixed bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-xl border-t border-stone-200 z-50 flex justify-center">
         <button onclick="window.deployTacticalSquads()" class="w-full max-w-lg btn-primary py-6 shadow-2xl group flex items-center justify-center gap-5 transition-transform active:scale-95 shadow-orange-900/10">
             <span class="text-orange-500 text-3xl font-black italic group-hover:animate-pulse">▶</span>
@@ -255,11 +279,11 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // CONFIG
-        const appId = 'themavericks-v37-full-analysis';
+        const appId = 'themavericks-v38-mvp-ratings';
         const apiKey = ""; 
         const MAV_CORE_CONFIG = { apiKey: "AIzaSyDeNArp-H56oEU5jvW3C66z1etnqvo1xIM", authDomain: "themavericks-837d5.firebaseapp.com", databaseURL: "https://themavericks-837d5-default-rtdb.firebaseio.com", projectId: "themavericks-837d5", storageBucket: "themavericks-837d5.firebasestorage.app", messagingSenderId: "275607550878", appId: "1:275607550878:web:a9747b68d46ae2204b748f", measurementId: "G-CW82846YN0" };
 
-        let db, auth, user, currentMVP = null;
+        let db, auth, user, currentMVP = null, selectedStars = 0;
         let repository = [], guests = [], attendingIds = new Set(), currentTeams = { black: [], orange: [] }, games = [];
 
         // UI ATTACHMENTS
@@ -366,7 +390,9 @@
                 rosterBlack: currentTeams.black.map(p => p.name),
                 rosterOrange: currentTeams.orange.map(p => p.name),
                 playerStats: players,
-                mvpName: players.find(p => p.id === currentMVP)?.name || "N/A"
+                mvpName: players.find(p => p.id === currentMVP)?.name || "N/A",
+                mvpId: currentMVP,
+                mvpRatings: []
             };
             
             try {
@@ -377,6 +403,32 @@
         };
 
         window.closeModals = () => { document.querySelectorAll('.setup-overlay').forEach(m => m.style.display = 'none'); };
+
+        window.openMVPRatingModal = (gameId) => {
+            const game = games.find(g => g.id === gameId);
+            if (!game || !game.mvpName) return;
+            document.getElementById('mvp-rating-name').innerText = `Scouting: ${game.mvpName}`;
+            document.getElementById('mvp-rating-modal').style.display = 'flex';
+            selectedStars = 0;
+            updateStarUI();
+            document.getElementById('submit-mvp-rate-btn').onclick = async () => {
+                if (selectedStars === 0) return alert("Select star count.");
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId), {
+                    mvpRatings: arrayUnion({ u: user.uid, stars: selectedStars, ts: Date.now() })
+                });
+                closeModals();
+            };
+        };
+
+        function updateStarUI() {
+            document.querySelectorAll('.star-rating').forEach(s => {
+                s.classList.toggle('active', parseInt(s.dataset.val) <= selectedStars);
+            });
+        }
+
+        document.querySelectorAll('.star-rating').forEach(s => {
+            s.onclick = () => { selectedStars = parseInt(s.dataset.val); updateStarUI(); };
+        });
 
         // WHATSAPP INTEGRATION
         window.shareTeamsToWA = () => {
@@ -404,7 +456,7 @@
 
                 const performSignIn = async () => {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        try { return await signInWithCustomToken(auth, __initial_auth_token); } catch (e) { console.warn("Fallback to anon."); }
+                        try { return await signInWithCustomToken(auth, __initial_auth_token); } catch (e) { console.warn("Fallback."); }
                     }
                     return await signInAnonymously(auth);
                 };
@@ -461,10 +513,15 @@
 
         function renderGamesList() {
             const list = document.getElementById('games-list');
-            if (games.length === 0) { list.innerHTML = '<div class="py-20 text-center text-stone-300 italic text-sm">No historical records found.</div>'; return; }
+            if (games.length === 0) { list.innerHTML = '<div class="py-20 text-center text-stone-300 italic text-sm">No match history found.</div>'; return; }
             list.innerHTML = '';
             games.forEach(g => {
                 const scorers = (g.playerStats || []).filter(p => parseInt(p.g) > 0).map(p => `${p.name} (${p.g})`).join(', ');
+                
+                // Calculate average star rating
+                const rts = g.mvpRatings || [];
+                const avgStars = rts.length > 0 ? (rts.reduce((a,b)=>a+b.stars,0)/rts.length).toFixed(1) : 0;
+
                 const item = document.createElement('div');
                 item.className = "bg-white p-6 rounded-3xl border border-stone-200 shadow-xl space-y-4 animate-pop";
                 item.innerHTML = `
@@ -485,7 +542,12 @@
                             ${scorers ? `<div class="p-3 bg-stone-50 rounded-xl"><p class="text-[8px] font-black text-stone-400 uppercase tracking-widest mb-1">Goal Scorers</p><p class="text-[10px] font-bold text-zinc-800 uppercase">${scorers}</p></div>` : ''}
                             ${g.winnerSquad && g.winnerSquad.length > 0 ? `<div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100"><p class="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Winning Mavericks</p><p class="text-[10px] font-bold text-emerald-800 uppercase italic">${g.winnerSquad.join(', ')}</p></div>` : ''}
                         </div>
-                        <button onclick="window.shareReportToWA('${g.id}')" class="w-full wa-brand py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-md">Share Analysis to WhatsApp</button>
+                        <div class="flex gap-2">
+                            <button onclick="window.openMVPRatingModal('${g.id}')" class="flex-1 bg-zinc-100 text-zinc-600 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
+                                <span>★</span> Rate MVP (${avgStars > 0 ? `${avgStars}/5` : 'No votes'})
+                            </button>
+                            <button onclick="window.shareReportToWA('${g.id}')" class="flex-1 wa-brand py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-md">WhatsApp Report</button>
+                        </div>
                     </div>`;
                 list.appendChild(item);
             });
@@ -569,7 +631,7 @@
             const p = repository.find(x => x.id === id);
             const area = document.getElementById(`bio-${id}`);
             area.innerHTML = '<div class="h-4 w-full shimmer rounded-full mt-2"></div>';
-            const prompt = `Write a gritty 1-sentence scout profile for Maverick ${p.name}. Age: ${p.ageGroup}, Role: ${p.posPrimary}, Rating: ${getTruePower(p).toFixed(1)}. Focus on their tactical contribution. Professional tone.`;
+            const prompt = `Write a gritty 1-sentence scout profile for Maverick ${p.name}. Age: ${p.ageGroup}, Role: ${p.posPrimary}, Rating: ${getTruePower(p).toFixed(1)}. Professional tone.`;
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const d = await r.json();
