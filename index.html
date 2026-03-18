@@ -12,6 +12,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- 
+    Application Structure Plan:
+    - Robust Firebase connection handler with diagnostic feedback.
+    - Match Day: 8-a-side 2-3-2 tactical mapping with player name labels.
+    - Registry: Persistent cloud database with one-click Demo Squad population.
+    - AI Integration: Gemini 2.5 Flash for professional scouting reports.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
     <style>
         :root { --mav-orange: #ea580c; --mav-black: #1b1b1f; --pitch-green: #15803d; }
         body { -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, sans-serif; background-color: #f5f5f4; }
@@ -35,8 +44,10 @@
         .shimmer { background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         
-        .setup-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-blur: 8px; }
-        .setup-card { background: white; border-radius: 2rem; padding: 2rem; max-width: 450px; w: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .setup-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-blur: 8px; }
+        .setup-card { background: white; border-radius: 2rem; padding: 2rem; max-width: 450px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .btn-primary { background: var(--mav-black); color: white; border-radius: 0.75rem; font-weight: 800; transition: all 0.2s; display: flex; align-items: center; justify-content: center; width: 100%; }
+        .btn-primary:active { transform: scale(0.96); opacity: 0.9; }
     </style>
 </head>
 <body class="text-zinc-900 min-h-screen pb-24">
@@ -49,18 +60,18 @@
                 <h2 class="font-black text-xl uppercase tracking-tighter text-zinc-900">Connect Cloud</h2>
             </div>
             <div class="bg-blue-50 p-4 rounded-xl space-y-2 border border-blue-100">
-                <p class="text-xs text-blue-700 font-bold uppercase tracking-widest">Setup Checklist:</p>
+                <p class="text-xs text-blue-700 font-bold uppercase tracking-widest">Mandatory Checklist:</p>
                 <ul class="text-[11px] text-blue-600 space-y-1">
-                    <li>1. Click "Add App" (Web) in Firebase Console</li>
-                    <li>2. Copy the <code class="bg-blue-100 px-1 rounded text-blue-800">firebaseConfig</code> block</li>
-                    <li>3. Enable <strong>Anonymous Auth</strong> (Sign-in method)</li>
-                    <li>4. Enable <strong>Cloud Firestore</strong> (NOT Realtime DB)</li>
-                    <li>5. Set Firestore to <strong>Test Mode</strong></li>
+                    <li>1. Copy the <strong>firebaseConfig</strong> from Project Settings.</li>
+                    <li>2. Paste it in the box below.</li>
+                    <li>3. IMPORTANT: Go to <strong>Authentication</strong> &gt; Enable <strong>Anonymous</strong>.</li>
+                    <li>4. IMPORTANT: Go to <strong>Firestore Database</strong> &gt; Enable <strong>Test Mode</strong>.</li>
                 </ul>
             </div>
-            <textarea id="config-input" rows="6" placeholder='Paste code block starting with { "apiKey": ...' class="w-full text-xs font-mono bg-stone-50 border border-stone-200 rounded-2xl p-4 focus:ring-2 focus:ring-orange-500 outline-none transition-all"></textarea>
+            <textarea id="config-input" rows="6" placeholder='Paste your { ... } config here' class="w-full text-xs font-mono bg-stone-50 border border-stone-200 rounded-2xl p-4 focus:ring-2 focus:ring-orange-500 outline-none transition-all"></textarea>
+            <div id="setup-error" class="hidden text-[10px] text-red-500 font-bold uppercase bg-red-50 p-3 rounded-lg border border-red-100"></div>
             <div class="flex flex-col gap-2">
-                <button onclick="saveManualConfig()" class="w-full bg-zinc-900 text-white font-black py-4 rounded-xl uppercase text-xs tracking-widest hover:bg-black transition-transform active:scale-95 shadow-xl">Connect Mavericks Cloud</button>
+                <button onclick="saveManualConfig()" class="btn-primary py-4 uppercase text-xs tracking-widest shadow-xl">Connect Mavericks Cloud</button>
                 <button onclick="document.getElementById('setup-overlay').style.display='none'" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest text-center">Use Offline</button>
             </div>
         </div>
@@ -101,10 +112,9 @@
                 </div>
                 
                 <div id="attendance-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1 mb-6">
-                    <div class="col-span-full py-16 text-center text-stone-300 italic text-sm">Synchronizing Cloud...</div>
+                    <div class="col-span-full py-16 text-center text-stone-300 italic text-sm">Searching for Mavericks...</div>
                 </div>
 
-                <!-- Guest Section -->
                 <div class="mt-8 pt-6 border-t border-dashed border-stone-200 space-y-4">
                     <h3 class="text-[10px] font-black uppercase tracking-widest text-stone-500">Quick Guest Access</h3>
                     <div class="flex flex-col gap-3">
@@ -126,14 +136,12 @@
                 </div>
             </div>
 
-            <!-- PLACEHOLDER -->
             <div id="match-welcome" class="bg-white rounded-2xl border border-stone-200 p-12 text-center space-y-3">
                 <div class="w-20 h-20 bg-stone-50 rounded-full mx-auto flex items-center justify-center text-4xl shadow-inner text-orange-600">⚽</div>
                 <h3 class="font-black uppercase tracking-tight text-lg text-zinc-900">Mavericks Command</h3>
                 <p class="text-[10px] text-stone-400 max-w-xs mx-auto leading-relaxed uppercase tracking-widest">Select players and tap deploy for match tactics.</p>
             </div>
 
-            <!-- RESULTS -->
             <div id="match-results" class="hidden space-y-6 animate-pop pb-12">
                 <div class="bg-white rounded-2xl shadow-md border border-stone-200 p-4">
                     <div class="flex justify-between items-center mb-4 px-1">
@@ -231,20 +239,21 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         let db, auth;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mavericks-v18-final';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mavericks-v19-stable';
         const apiKey = ""; // Gemini API
         
         let repository = [], filteredRepo = [], guests = [], attendingIds = new Set(), currentTeams = { black: [], orange: [] };
 
-        // Helper to load/save config
+        // Host Handling Logic
         function getFirebaseConfig() {
             if (typeof __firebase_config !== 'undefined' && __firebase_config) return JSON.parse(__firebase_config);
-            const saved = localStorage.getItem('mavericks_fb_config_v3');
+            const saved = localStorage.getItem('mavericks_fb_config_final');
             return saved ? JSON.parse(saved) : null;
         }
 
         window.saveManualConfig = () => {
             const input = document.getElementById('config-input').value.trim();
+            const errBox = document.getElementById('setup-error');
             try {
                 // Aggressive cleaning to handle standard JS object formats
                 let cleaned = input.substring(input.indexOf('{'), input.lastIndexOf('}') + 1)
@@ -252,9 +261,12 @@
                                 .replace(/'/g, '"')
                                 .replace(/,(\s*?)\}/g, '}');
                 const config = JSON.parse(cleaned);
-                localStorage.setItem('mavericks_fb_config_v3', JSON.stringify(config));
+                localStorage.setItem('mavericks_fb_config_final', JSON.stringify(config));
                 location.reload();
-            } catch (e) { alert("Format Error. Paste the config exactly from Firebase Console Web App registration."); }
+            } catch (e) { 
+                errBox.innerText = "Error: Invalid Config Block. Copy the full { ... } from Firebase.";
+                errBox.classList.remove('hidden');
+            }
         };
 
         window.toggleSetup = () => { document.getElementById('setup-overlay').style.display = 'flex'; };
@@ -273,10 +285,18 @@
                 auth = getAuth(appInstance);
                 db = getFirestore(appInstance);
 
+                // Auth Rule 3 Implementation
                 onAuthStateChanged(auth, async (user) => {
                     if (!user) {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
-                        else await signInAnonymously(auth);
+                        try {
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+                            else await signInAnonymously(auth);
+                        } catch (e) {
+                             const chip = document.getElementById('sync-chip');
+                             chip.innerText = "Auth Error";
+                             document.getElementById('error-status').innerText = "Enable Anonymous Auth in Firebase Console";
+                             document.getElementById('error-status').classList.remove('hidden');
+                        }
                     } else {
                         const chip = document.getElementById('sync-chip');
                         chip.innerText = "Synced";
@@ -285,9 +305,9 @@
                     }
                 });
             } catch (err) {
-                document.getElementById('error-status').innerText = err.message;
+                document.getElementById('error-status').innerText = "Config Error: Check your API Key";
                 document.getElementById('error-status').classList.remove('hidden');
-                document.getElementById('sync-chip').innerText = "Auth Error";
+                document.getElementById('sync-chip').innerText = "Offline";
             }
         }
 
@@ -300,9 +320,9 @@
                 renderRepoList();
             }, (err) => {
                 const errorEl = document.getElementById('error-status');
-                errorEl.innerText = "Permission Denied: Ensure Firestore is in Test Mode";
+                errorEl.innerText = "Database Error: Ensure Firestore is in Test Mode";
                 errorEl.classList.remove('hidden');
-                document.getElementById('sync-chip').innerText = "Access Error";
+                document.getElementById('sync-chip').innerText = "Access Denied";
             });
         }
 
@@ -321,21 +341,22 @@
         };
 
         window.installDemoSquad = async () => {
-            if (!auth || !auth.currentUser) return alert("Connection not ready. Paste your config first.");
+            if (!auth || !auth.currentUser) return alert("Database not ready yet.");
             const btn = document.getElementById('demo-btn');
-            btn.innerText = "Syncing Pool..."; btn.disabled = true;
+            btn.innerText = "Saving to Cloud..."; btn.disabled = true;
             
+            // Explicit ratings from uploaded report data
             const demoPool = [
-                { n: "Lok", p: "Defense", skill: 9, ag: 8 }, { n: "Vish", p: "GK", skill: 9, ag: 7 }, { n: "Ashwin", p: "GK", skill: 9, ag: 7 }, { n: "Robin", p: "Midfield", skill: 8, ag: 8 },
-                { n: "Staines", p: "Defense", skill: 3, ag: 5 }, { n: "Ash", p: "Midfield", skill: 5, ag: 8 }, { n: "Pradeep", p: "Midfield", skill: 6, ag: 9 }, { n: "Manu", p: "Midfield", skill: 2, ag: 6 },
-                { n: "Deb", p: "Midfield", skill: 2, ag: 7 }, { n: "Sandeep", p: "Midfield", skill: 5, ag: 8 }, { n: "Akshay", p: "Defense", skill: 1, ag: 5 }, { n: "Sujith", p: "Defense", skill: 3, ag: 4 },
-                { n: "Ajay", p: "Forward", skill: 8, ag: 7 }, { n: "Alex", p: "Forward", skill: 6, ag: 9 }, { n: "Subin", p: "Forward", skill: 7, ag: 6 }, { n: "Anoop", p: "Forward", skill: 7, ag: 5 }
+                { n: "Lok", p: "Defense", sk: 9, ag: 8 }, { n: "Vish", p: "GK", sk: 9, ag: 7 }, { n: "Ashwin", p: "GK", sk: 9, ag: 7 }, { n: "Robin", p: "Midfield", sk: 8, ag: 8 },
+                { n: "Staines", p: "Defense", sk: 3, ag: 5 }, { n: "Ash", p: "Midfield", sk: 5, ag: 8 }, { n: "Pradeep", p: "Midfield", sk: 6, ag: 9 }, { n: "Manu", p: "Midfield", sk: 2, ag: 6 },
+                { n: "Deb", p: "Midfield", sk: 2, ag: 7 }, { n: "Sandeep", p: "Midfield", sk: 5, ag: 8 }, { n: "Akshay", p: "Defense", sk: 1, ag: 5 }, { n: "Sujith", p: "Defense", sk: 3, ag: 4 },
+                { n: "Ajay", p: "Forward", sk: 8, ag: 7 }, { n: "Alex", p: "Forward", sk: 6, ag: 9 }, { n: "Subin", p: "Forward", sk: 7, ag: 6 }, { n: "Anoop", p: "Forward", sk: 7, ag: 5 }
             ];
 
             for (const p of demoPool) {
-                await window.saveToCloud({ name: p.n, posPrimary: p.p, posSecondary: 'None', skill: p.skill, agility: p.ag, ageGroup: "21-25" });
+                await window.saveToCloud({ name: p.n, posPrimary: p.p, posSecondary: 'None', skill: p.sk, agility: p.ag, ageGroup: "21-25" });
             }
-            btn.innerText = "Demo Appended!";
+            btn.innerText = "Squad Synced!";
             setTimeout(() => { btn.innerText = "Append Demo Squad (16 Mavs)"; btn.disabled = false; }, 2000);
         };
 
@@ -425,8 +446,8 @@
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const d = await r.json(); loader.classList.add('hidden');
-                output.innerHTML = d.candidates?.[0]?.content?.parts?.[0]?.text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>') || "Offline.";
-            } catch (e) { loader.classList.add('hidden'); output.innerHTML = "Check connection link."; }
+                output.innerHTML = d.candidates?.[0]?.content?.parts?.[0]?.text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>') || "Coach offline.";
+            } catch (e) { loader.classList.add('hidden'); output.innerHTML = "Access Link Error."; }
         };
 
         function renderAttendance() {
