@@ -29,63 +29,66 @@
         
         .tab-active { color: var(--mav-orange); border-bottom: 4px solid var(--mav-orange); font-weight: 800; }
         .animate-pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        @keyframes pop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes pop { from { transform: scale(0.97); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
         input[type=range] { accent-color: var(--mav-orange); }
         .shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
-        
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
         .setup-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-blur: 15px; }
         .setup-card { background: white; border-radius: 2rem; padding: 2.5rem; max-width: 480px; width: 100%; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.6); }
-        .btn-primary { background: var(--mav-black); color: white; border-radius: 1rem; font-weight: 800; transition: all 0.2s; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 3.5rem; cursor: pointer; border: none; }
-        .btn-primary:active { transform: scale(0.96); }
+        
+        .btn-primary { background: var(--mav-black); color: white; border-radius: 1.25rem; font-weight: 800; transition: all 0.2s; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 4rem; cursor: pointer; border: none; }
+        .btn-primary:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; transform: none !important; }
+        .btn-primary:active:not(:disabled) { transform: scale(0.96); }
         
         .wa-brand { background: #25D366; color: white; }
         .wa-brand:hover { background: #22c35e; }
         
+        .custom-scrollbar { scroll-behavior: smooth; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
 
         .form-input { width: 100%; background: #f9fafb; border: 2px solid #f3f4f6; border-radius: 1rem; padding: 1rem 1.25rem; font-size: 0.875rem; transition: all 0.2s; outline: none; }
         .form-input:focus { border-color: var(--mav-orange); background: white; box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1); }
         
-        .mvp-btn.active { color: #facc15; transform: scale(1.1); font-weight: 900; border-color: #facc15; }
-        
-        .star-rating { color: #d1d5db; cursor: pointer; transition: color 0.2s; font-size: 1.5rem; }
+        .star-rating { color: #d1d5db; cursor: pointer; transition: color 0.2s; font-size: 1.75rem; }
         .star-rating.active { color: #facc15; }
+
+        .admin-only { display: none !important; }
+        .admin-active .admin-only { display: flex !important; }
     </style>
 </head>
-<body class="text-zinc-900 min-h-screen pb-32">
+<body class="text-zinc-900 min-h-screen pb-40">
 
-    <!-- Firestore Connection Overlay -->
+    <!-- Connection Overlay -->
     <div id="setup-overlay" class="setup-overlay">
         <div class="setup-card space-y-6 animate-pop">
             <div class="flex items-center gap-4">
                 <img src="Untitled design (1).png" class="h-12 w-auto" alt="Logo">
                 <h2 class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Mavericks Cloud</h2>
             </div>
-            <p class="text-sm text-stone-500 leading-relaxed italic">
-                Direct link to <strong>themavericks-837d5</strong> is active.
-            </p>
-            <button onclick="window.closeModals()" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Dismiss</button>
+            <p id="auth-status-msg" class="text-sm text-stone-500 leading-relaxed italic">Synchronizing tactical data...</p>
+            <button onclick="window.closeModals()" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Enter Registry</button>
         </div>
     </div>
 
-    <!-- Header Navigation -->
+    <!-- Header -->
     <header class="bg-white/95 backdrop-blur-md border-b border-stone-200 sticky top-0 z-50">
         <div class="max-w-4xl mx-auto px-4 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <img src="Untitled design (1).png" alt="The Mavericks" class="h-14 w-auto object-contain" onerror="this.style.display='none'; document.getElementById('logo-text').classList.remove('hidden')">
-                <div id="logo-text" class="hidden font-black uppercase tracking-tighter text-xl text-zinc-900">The Mavericks</div>
+            <div class="flex items-center gap-3" onclick="window.triggerAdmin()">
+                <img src="Untitled design (1).png" alt="The Mavericks" class="h-14 w-auto object-contain cursor-pointer">
+                <div id="logo-text" class="hidden sm:block font-black uppercase tracking-tighter text-xl text-zinc-900">The Mavericks</div>
             </div>
             <div class="flex flex-col items-end">
-                <button id="sync-chip" onclick="window.toggleSetup()" class="text-[9px] font-black uppercase bg-amber-50 px-4 py-2 rounded-full text-amber-600 border-2 border-amber-100 shadow-sm transition-all hover:scale-105 active:scale-95">Connecting...</button>
-                <div id="status-debug" class="text-[7px] font-bold text-stone-300 uppercase mt-1">Initializing...</div>
+                <button id="sync-chip" class="text-[9px] font-black uppercase bg-amber-50 px-4 py-2 rounded-full text-amber-600 border-2 border-amber-100 shadow-sm transition-all">Connecting...</button>
+                <div id="admin-badge" class="hidden text-[7px] font-black bg-red-600 text-white px-2 py-0.5 rounded mt-1 uppercase tracking-widest animate-pulse">Admin Mode</div>
             </div>
         </div>
         <nav class="flex max-w-4xl mx-auto border-t border-stone-100 bg-white shadow-sm overflow-hidden">
-            <button onclick="setView('match')" id="nav-match" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest tab-active transition-all">Match Day</button>
-            <button onclick="setView('records')" id="nav-records" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all text-center">History</button>
-            <button onclick="setView('registry')" id="nav-registry" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all">Registry</button>
+            <button onclick="window.setView('match')" id="nav-match" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest tab-active transition-all">Match Day</button>
+            <button onclick="window.setView('records')" id="nav-records" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all text-center">Match History</button>
+            <button onclick="window.setView('registry')" id="nav-registry" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all">Registry</button>
         </nav>
     </header>
 
@@ -96,20 +99,21 @@
             <div class="bg-white rounded-3xl shadow-xl border border-stone-200 p-8 border-l-[10px] border-orange-500">
                 <div class="flex justify-between items-start mb-8">
                     <div>
-                        <h2 class="font-black uppercase text-xs tracking-widest text-zinc-400">Match Day Selection</h2>
-                        <p class="text-sm text-stone-500 mt-1 font-medium italic">Check players ready for the pitch.</p>
+                        <h2 class="font-black uppercase text-xs tracking-widest text-zinc-400">Tactical Match Pool</h2>
+                        <p class="text-sm text-stone-500 mt-1 font-medium italic">Confirmed players for today's session.</p>
                     </div>
                     <div class="text-right bg-stone-50 px-5 py-3 rounded-2xl border border-stone-100 shadow-inner">
                         <span id="attending-count" class="text-5xl font-black text-orange-600 leading-none">0</span>
+                        <span class="text-[10px] font-black block text-stone-400 mt-1 uppercase tracking-tighter">Selected / 16</span>
                     </div>
                 </div>
                 
                 <div id="attendance-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2 mb-8">
-                    <div class="col-span-full py-20 text-center text-stone-300 italic text-sm font-medium">Synchronizing with Registry...</div>
+                    <div class="col-span-full py-20 text-center text-stone-300 italic text-sm font-medium leading-relaxed">Connecting...</div>
                 </div>
 
                 <div class="mt-10 pt-8 border-t-2 border-dashed border-stone-100 space-y-5">
-                    <h3 class="text-[11px] font-black uppercase tracking-widest text-zinc-900">Add Guest Maverick</h3>
+                    <h3 class="text-[11px] font-black uppercase tracking-widest text-zinc-900">Add Guest</h3>
                     <div class="flex flex-col gap-3">
                         <input type="text" id="guest-name" placeholder="Full Name" class="form-input">
                         <div class="flex gap-3">
@@ -122,21 +126,20 @@
                 </div>
             </div>
 
-            <div id="match-welcome" class="bg-white rounded-3xl border border-stone-200 p-16 text-center space-y-4 shadow-sm">
-                <div class="w-24 h-24 bg-stone-50 rounded-full mx-auto flex items-center justify-center text-5xl shadow-inner text-orange-600">⚽</div>
-                <h3 class="font-black uppercase tracking-tight text-xl text-zinc-900">Tactical Deployment</h3>
-                <p class="text-[11px] text-stone-400 max-w-xs mx-auto uppercase tracking-widest font-medium">Select squads and tap Deploy Teams for analysis.</p>
-            </div>
-
+            <!-- Match Results & Field Map -->
             <div id="match-results" class="hidden space-y-8 animate-pop pb-20">
-                <div class="bg-white rounded-[2.5rem] shadow-2xl border border-stone-200 p-5">
-                    <div class="flex justify-between items-center mb-6 px-2">
-                        <h3 class="text-xs font-black uppercase tracking-widest text-zinc-400">Tactical Pitch (8-a-side)</h3>
-                        <div class="flex gap-2">
-                             <button onclick="window.downloadCanvas()" class="text-[10px] font-black bg-stone-100 text-stone-600 px-5 py-2.5 rounded-full uppercase tracking-widest hover:bg-stone-200 transition-all">📥 PNG</button>
-                            <button onclick="window.generateStrategicInsights()" class="bg-zinc-900 text-white text-[10px] font-black px-6 py-2.5 rounded-full uppercase tracking-widest hover:bg-orange-600 shadow-xl transition-all">✨ AI Scout</button>
+                <div id="ai-scout-container" class="bg-white rounded-3xl border border-orange-200 p-6 shadow-xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">✨</span>
+                            <h3 class="font-black uppercase text-xs tracking-widest text-orange-600">Coach Gemini Scouting</h3>
                         </div>
+                        <button onclick="window.generateScoutReport()" id="scout-refresh-btn" class="text-[9px] font-black uppercase text-stone-400 bg-stone-100 px-3 py-1 rounded-full">Analyze Parity</button>
                     </div>
+                    <div id="ai-scout-content" class="text-sm text-stone-600 leading-relaxed font-medium">Ready for tactical analysis.</div>
+                </div>
+
+                <div class="bg-white rounded-[2.5rem] shadow-2xl border border-stone-200 p-5">
                     <div class="pitch-container"><canvas id="pitchCanvas"></canvas></div>
                 </div>
 
@@ -151,38 +154,34 @@
                     </div>
                 </div>
 
-                <button onclick="window.shareTeamsToWA()" class="wa-brand w-full py-6 rounded-3xl text-xs font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">
+                <button onclick="window.shareTeamsToWA()" class="wa-brand w-full py-6 rounded-3xl text-xs font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3">
                     💬 Share Composition to WhatsApp
                 </button>
 
-                <!-- POST GAME LOGGING -->
                 <div class="bg-white rounded-3xl border border-stone-200 p-8 shadow-xl space-y-6">
-                    <h3 class="font-black uppercase text-xs tracking-widest text-zinc-400 text-center">Post-Match Analysis</h3>
+                    <h3 class="font-black uppercase text-xs tracking-widest text-zinc-400 text-center">Post-Match Results</h3>
                     <div class="grid grid-cols-2 gap-8 text-center">
                         <div class="space-y-2"><p class="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Black Score</p><input type="number" id="score-black" class="w-full text-4xl font-black text-center bg-stone-50 border-stone-200 rounded-2xl py-4" value="0"></div>
                         <div class="space-y-2"><p class="text-[10px] font-black uppercase text-zinc-400 tracking-widest text-orange-600">Orange Score</p><input type="number" id="score-orange" class="w-full text-4xl font-black text-center bg-stone-50 border-stone-200 rounded-2xl py-4" value="0"></div>
                     </div>
-                    <button onclick="window.logMatchResult()" class="btn-primary py-5 uppercase text-xs tracking-widest">Submit Results, Scorers & MVP</button>
+                    <button onclick="window.logMatchResult()" class="btn-primary py-5 uppercase text-xs tracking-widest">Submit Results & Nominate MVP</button>
                 </div>
             </div>
         </section>
 
         <!-- VIEW: MATCH RECORDS -->
         <section id="view-records" class="hidden animate-pop space-y-8">
-            <div class="bg-zinc-900 rounded-[2.5rem] p-10 text-white text-center shadow-2xl relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
-                <h2 class="text-3xl font-black uppercase tracking-tighter italic text-white">Season History</h2>
-                <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Tracking Seasonal Records</p>
-            </div>
             <div id="games-list" class="space-y-6"></div>
         </section>
 
         <!-- VIEW: REGISTRY -->
         <section id="view-registry" class="hidden animate-pop space-y-8">
-            <div class="bg-zinc-900 rounded-[2.5rem] p-10 text-white text-center shadow-2xl relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-2 bg-orange-600"></div>
-                <h2 class="text-3xl font-black uppercase tracking-tighter italic text-white">Squad Registry</h2>
-                <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Official Maverick Performance Hub</p>
+            <div class="admin-only bg-red-50 border-2 border-red-200 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+                <div class="text-center sm:text-left">
+                    <p class="text-[10px] font-black uppercase text-red-600 tracking-widest">Admin Control Panel</p>
+                    <p class="text-xs text-red-800 font-medium">Registry overrides and core restoration tools.</p>
+                </div>
+                <button id="restore-btn" onclick="window.installCoreSquad()" class="bg-red-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Restore Core Squad (16 Players)</button>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -192,31 +191,21 @@
                         <form id="reg-form" class="space-y-5">
                             <input type="text" id="reg-name" required placeholder="Full Name" class="form-input">
                             <select id="reg-age" required class="form-input font-bold appearance-none">
-                                <option value="21-25">Age 21-25</option>
-                                <option value="26-30">Age 26-30</option>
-                                <option value="31-35">Age 31-35</option>
-                                <option value="36-40">Age 36-40</option>
-                                <option value="41-45">Age 41-45</option>
-                                <option value="46-50">Age 46-50</option>
-                                <option value="50+">Age 50+</option>
+                                <option value="21-25">21-25</option><option value="26-30">26-30</option><option value="31-35">31-35</option><option value="36-40">36-40</option><option value="41-45">41-45</option><option value="46-50">46-50</option><option value="50+">50+</option>
                             </select>
                             <div class="grid grid-cols-2 gap-3">
                                 <select id="reg-pos1" required class="form-input font-bold appearance-none"><option value="" disabled selected>Primary</option><option value="Forward">Forward</option><option value="Midfield">Midfield</option><option value="Defense">Defense</option><option value="GK">Goalie</option></select>
                                 <select id="reg-pos2" class="form-input font-bold appearance-none"><option value="None">Secondary</option><option value="Forward">Forward</option><option value="Midfield">Midfield</option><option value="Defense">Defense</option><option value="GK">Goalie</option></select>
                             </div>
-                            <div class="space-y-6 pt-4 border-t border-stone-100">
-                                <div class="flex justify-between text-[11px] font-black uppercase text-zinc-400"><span>Self Skill: <span id="s-val" class="text-orange-600">5</span></span><span>Self Agility: <span id="a-val" class="text-orange-600">5</span></span></div>
-                                <input type="range" id="reg-skill" min="1" max="10" value="5" class="w-full h-2.5 bg-stone-100 rounded-lg appearance-none" oninput="document.getElementById('s-val').innerText=this.value"><input type="range" id="reg-agility" min="1" max="10" value="5" class="w-full h-2.5 bg-stone-100 rounded-lg appearance-none" oninput="document.getElementById('a-val').innerText=this.value">
-                            </div>
-                            <button type="submit" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Create Profile</button>
+                            <button type="submit" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Append Profile</button>
                         </form>
                     </div>
                 </div>
                 <div class="lg:col-span-2">
                     <div class="bg-white rounded-[2rem] border border-stone-200 overflow-hidden shadow-xl flex flex-col min-h-[600px]">
                         <div class="p-8 border-b border-stone-100 bg-stone-50/30 flex flex-col sm:flex-row justify-between items-center gap-4">
-                            <h3 class="font-black uppercase text-xs tracking-widest text-zinc-400 tracking-tighter">Maverick Roster</h3>
-                            <input type="text" id="repo-search" oninput="window.filterRepo()" placeholder="Search profiles..." class="text-xs px-6 py-3 border-2 border-stone-100 rounded-full w-full sm:w-56 bg-white outline-none focus:border-orange-500 transition-all">
+                            <h3 class="font-black uppercase text-xs tracking-widest text-zinc-400 tracking-tighter">Maverick Database</h3>
+                            <input type="text" id="repo-search" oninput="window.filterRepo()" placeholder="Search squad..." class="text-xs px-6 py-3 border-2 border-stone-100 rounded-full w-full sm:w-56 bg-white outline-none focus:border-orange-500 transition-all">
                         </div>
                         <div id="repo-list" class="divide-y divide-stone-50 overflow-y-auto custom-scrollbar flex-grow"></div>
                     </div>
@@ -225,51 +214,31 @@
         </section>
     </main>
 
-    <!-- UI MODALS -->
-    <div id="rating-modal" class="setup-overlay">
-        <div class="setup-card space-y-6 animate-pop">
-            <h2 id="rating-target-name" class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Peer Assessment</h2>
-            <div class="space-y-6">
-                <div><p class="text-[11px] font-black uppercase text-zinc-400 mb-2">Skill Rating: <span id="peer-s-val" class="text-orange-600">5</span></p><input type="range" id="peer-skill" min="1" max="10" value="5" class="w-full h-2.5 bg-stone-100 rounded-lg" oninput="document.getElementById('peer-s-val').innerText=this.value"></div>
-                <div><p class="text-[11px] font-black uppercase text-zinc-400 mb-2">Agility Rating: <span id="peer-a-val" class="text-orange-600">5</span></p><input type="range" id="peer-agility" min="1" max="10" value="5" class="w-full h-2.5 bg-stone-100 rounded-lg" oninput="document.getElementById('peer-a-val').innerText=this.value"></div>
-            </div>
-            <div class="flex flex-col gap-3 pt-4"><button id="submit-rating-btn" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-xl">Submit Anonymous Rating</button><button onclick="window.closeModals()" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest">Cancel</button></div>
-        </div>
-    </div>
-
+    <!-- STATS MODAL -->
     <div id="stats-modal" class="setup-overlay">
         <div class="setup-card space-y-6 animate-pop max-h-[85vh] flex flex-col">
-            <div><h2 class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Match Summary</h2><p class="text-[10px] text-stone-400 uppercase font-bold tracking-widest">Log player contributions and nominate MVP</p></div>
+            <div><h2 class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Analysis</h2><p class="text-[10px] text-stone-400 uppercase font-bold tracking-widest">Select MVP and enter goal counts</p></div>
             <div id="stats-inputs" class="space-y-4 overflow-y-auto custom-scrollbar flex-grow pr-2"></div>
-            <div class="flex flex-col gap-3 pt-4 border-t border-stone-100"><button onclick="window.saveStatsAndClose()" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Confirm Season Record</button><button onclick="window.closeModals()" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest">Go Back</button></div>
+            <button onclick="window.saveStatsAndClose()" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-2xl">Confirm Record</button>
         </div>
     </div>
 
-    <!-- MVP Performance Rating Modal -->
+    <!-- MVP Rating Modal -->
     <div id="mvp-rating-modal" class="setup-overlay">
         <div class="setup-card space-y-6 animate-pop">
-            <div>
-                <h2 class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Rate MVP</h2>
-                <p id="mvp-rating-name" class="text-xs text-orange-600 font-bold uppercase tracking-widest mt-1"></p>
-            </div>
+            <div><h2 class="font-black text-2xl uppercase tracking-tighter text-zinc-900">Rate Performance</h2><p id="mvp-rating-name" class="text-xs text-orange-600 font-bold uppercase tracking-widest mt-1"></p></div>
             <div class="flex justify-center gap-2 py-4">
-                <span class="star-rating" data-val="1">★</span>
-                <span class="star-rating" data-val="2">★</span>
-                <span class="star-rating" data-val="3">★</span>
-                <span class="star-rating" data-val="4">★</span>
-                <span class="star-rating" data-val="5">★</span>
+                <span class="star-rating" data-val="1">★</span><span class="star-rating" data-val="2">★</span><span class="star-rating" data-val="3">★</span><span class="star-rating" data-val="4">★</span><span class="star-rating" data-val="5">★</span>
             </div>
-            <div class="flex flex-col gap-3 pt-4">
-                <button id="submit-mvp-rate-btn" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-xl">Confirm Stars</button>
-                <button onclick="window.closeModals()" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest">Dismiss</button>
-            </div>
+            <div class="flex flex-col gap-3 pt-4"><button id="submit-mvp-rate-btn" class="btn-primary py-5 uppercase text-xs tracking-widest shadow-xl">Confirm Stars</button><button onclick="window.closeModals()" class="w-full py-2 text-stone-400 text-[10px] font-black uppercase tracking-widest">Dismiss</button></div>
         </div>
     </div>
 
+    <!-- PERSISTENT ACTION BAR -->
     <div id="action-bar" class="fixed bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-xl border-t border-stone-200 z-50 flex justify-center">
-        <button onclick="window.deployTacticalSquads()" class="w-full max-w-lg btn-primary py-6 shadow-2xl group flex items-center justify-center gap-5 transition-transform active:scale-95 shadow-orange-900/10">
-            <span class="text-orange-500 text-3xl font-black italic group-hover:animate-pulse">▶</span>
-            <span class="uppercase italic tracking-tighter text-xl text-white">Deploy Match Teams</span>
+        <button id="deploy-btn" disabled onclick="window.deployTacticalSquads()" class="w-full max-w-lg btn-primary py-6 shadow-2xl group flex flex-col items-center justify-center gap-1 transition-all active:scale-95 shadow-orange-900/10">
+            <span class="uppercase italic tracking-tighter text-xl">Deploy Match Teams</span>
+            <span id="deploy-requirement" class="text-[10px] opacity-60 font-black">Waiting for 16 Players</span>
         </button>
     </div>
 
@@ -278,27 +247,34 @@
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // CONFIG
-        const appId = 'themavericks-v38-mvp-ratings';
+        // FIREBASE CORE
+        const appId = 'themavericks-v45-tactical-pos';
         const apiKey = ""; 
-        const MAV_CORE_CONFIG = { apiKey: "AIzaSyDeNArp-H56oEU5jvW3C66z1etnqvo1xIM", authDomain: "themavericks-837d5.firebaseapp.com", databaseURL: "https://themavericks-837d5-default-rtdb.firebaseio.com", projectId: "themavericks-837d5", storageBucket: "themavericks-837d5.firebasestorage.app", messagingSenderId: "275607550878", appId: "1:275607550878:web:a9747b68d46ae2204b748f", measurementId: "G-CW82846YN0" };
+        const firebaseConfig = { apiKey: "AIzaSyDeNArp-H56oEU5jvW3C66z1etnqvo1xIM", authDomain: "themavericks-837d5.firebaseapp.com", databaseURL: "https://themavericks-837d5-default-rtdb.firebaseio.com", projectId: "themavericks-837d5", storageBucket: "themavericks-837d5.firebasestorage.app", messagingSenderId: "275607550878", appId: "1:275607550878:web:a9747b68d46ae2204b748f", measurementId: "G-CW82846YN0" };
 
-        let db, auth, user, currentMVP = null, selectedStars = 0;
+        let db, auth, user, currentMVP = null, selectedStars = 0, adminClicks = 0;
         let repository = [], guests = [], attendingIds = new Set(), currentTeams = { black: [], orange: [] }, games = [];
 
-        // UI ATTACHMENTS
+        // UI ATTACHMENTS (Window Scope Binding)
         window.setView = (view) => {
             document.getElementById('view-match').classList.toggle('hidden', view !== 'match');
             document.getElementById('view-records').classList.toggle('hidden', view !== 'records');
             document.getElementById('view-registry').classList.toggle('hidden', view !== 'registry');
             document.getElementById('action-bar').classList.toggle('hidden', view !== 'match');
-            document.getElementById('nav-match').className = `flex-1 py-5 text-[10px] font-black uppercase tracking-widest transition-all ${view === 'match' ? 'tab-active' : 'text-stone-400'}`;
-            document.getElementById('nav-records').className = `flex-1 py-5 text-[10px] font-black uppercase tracking-widest transition-all ${view === 'records' ? 'tab-active' : 'text-stone-400'}`;
-            document.getElementById('nav-registry').className = `flex-1 py-5 text-[10px] font-black uppercase tracking-widest transition-all ${view === 'registry' ? 'tab-active' : 'text-stone-400'}`;
+            document.querySelectorAll('nav button').forEach(b => b.className = "flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all");
+            document.getElementById(`nav-${view}`).className = "flex-1 py-5 text-[10px] font-black uppercase tracking-widest tab-active transition-all";
         };
 
-        window.toggleSetup = () => { document.getElementById('setup-overlay').style.display = 'flex'; };
-        
+        window.triggerAdmin = () => {
+            adminClicks++;
+            if (adminClicks >= 5) {
+                document.body.classList.add('admin-active');
+                document.getElementById('admin-badge').classList.remove('hidden');
+                alert("ADMIN MODE ACTIVE: Restore and Delete tools enabled.");
+                renderRepoListUI(repository); 
+            }
+        };
+
         window.filterRepo = () => {
             const term = document.getElementById('repo-search').value.toLowerCase();
             const players = repository.filter(p => p.name.toLowerCase().includes(term));
@@ -312,17 +288,263 @@
             n.value = ''; renderAttendance();
         };
 
-        window.removeGuest = (id) => { guests = guests.filter(g => g.id !== id); renderAttendance(); };
-
         window.deployTacticalSquads = () => {
             const squad = [...repository.filter(p => attendingIds.has(p.id)), ...guests];
-            if (squad.length < 2) return;
             squad.sort((a,b) => getTruePower(b) - getTruePower(a));
             const tb = [], to = []; let pB = 0, pO = 0;
             squad.forEach(p => { const r = getTruePower(p); if (pB <= pO) { tb.push(p); pB += r; } else { to.push(p); pO += r; } });
             currentTeams = { black: tb, orange: to };
-            renderFinalOutput(tb, to, pB, pO);
+            renderFinalOutput(tb, to);
         };
+
+        window.setMVP = (id) => {
+            currentMVP = id;
+            document.querySelectorAll('.mvp-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.id === id));
+        };
+
+        window.logMatchResult = () => {
+            const container = document.getElementById('stats-inputs');
+            container.innerHTML = ''; currentMVP = null;
+            const allPlayers = [...currentTeams.black, ...currentTeams.orange];
+            allPlayers.forEach(p => {
+                container.innerHTML += `<div class="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100" data-pid="${p.id}" data-pname="${p.name}"><div class="flex-grow"><p class="font-black text-xs text-zinc-900 uppercase">${p.name}</p><button onclick="window.setMVP('${p.id}')" data-id="${p.id}" class="mvp-btn mt-1">★ MVP</button></div><div class="flex gap-4"><input type="number" class="goal-input w-12 h-10 text-center font-black bg-white border-2 border-stone-100 rounded-xl" value="0"></div></div>`;
+            });
+            document.getElementById('stats-modal').style.display = 'flex';
+        };
+
+        window.saveStatsAndClose = async () => {
+            if (!user) return;
+            const players = Array.from(document.querySelectorAll('#stats-inputs div[data-pid]')).map(div => ({
+                name: div.dataset.pname,
+                g: div.querySelector('.goal-input').value
+            }));
+            const bScore = parseInt(document.getElementById('score-black').value);
+            const oScore = parseInt(document.getElementById('score-orange').value);
+            const matchData = {
+                ts: Date.now(),
+                date: new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric' }),
+                scoreBlack: bScore, scoreOrange: oScore,
+                winner: bScore > oScore ? "TEAM BLACK" : (oScore > bScore ? "TEAM ORANGE" : "DRAW"),
+                winnerSquad: bScore > oScore ? currentTeams.black.map(p => p.name) : (oScore > bScore ? currentTeams.orange.map(p => p.name) : []),
+                rosterBlack: currentTeams.black.map(p => p.name), rosterOrange: currentTeams.orange.map(p => p.name),
+                playerStats: players,
+                mvpName: players.find(p => [...repository, ...guests].find(x=>x.id===currentMVP)?.name === p.name)?.name || "N/A",
+                mvpRatings: []
+            };
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'games'), matchData);
+            window.closeModals();
+            window.setView('records');
+        };
+
+        window.openMVPRatingModal = (gameId) => {
+            const g = games.find(x => x.id === gameId);
+            if (!g) return;
+            document.getElementById('mvp-rating-name').innerText = `Rating ${g.mvpName}`;
+            document.getElementById('mvp-rating-modal').style.display = 'flex';
+            selectedStars = 0; updateStarUI();
+            document.getElementById('submit-mvp-rate-btn').onclick = async () => {
+                if (selectedStars === 0) return alert("Select stars.");
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId), { mvpRatings: arrayUnion({ u: user.uid, stars: selectedStars, ts: Date.now() }) });
+                window.closeModals();
+            };
+        };
+
+        // ADMIN TOOLS
+        window.deletePlayer = async (id) => {
+            if (confirm("Permanently delete this Maverick profile?")) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', id));
+                } catch(e) { console.error(e); }
+            }
+        };
+
+        window.installCoreSquad = async () => {
+            const btn = document.getElementById('restore-btn');
+            const coreData = [
+                { n: "Lok", p: "Defense", s: 9, a: 8 }, { n: "Vish", p: "GK", s: 9, a: 7 }, { n: "Ashwin", p: "GK", s: 9, a: 7 }, { n: "Robin", p: "Midfield", s: 8, a: 8 },
+                { n: "Staines", p: "Defense", s: 3, a: 5 }, { n: "Ash", p: "Midfield", s: 5, a: 8 }, { n: "Pradeep", p: "Midfield", s: 6, a: 9 }, { n: "Manu", p: "Midfield", s: 2, a: 6 },
+                { n: "Deb", p: "Midfield", s: 2, a: 7 }, { n: "Sandeep", p: "Midfield", s: 5, a: 8 }, { n: "Akshay", p: "Defense", s: 1, a: 5 }, { n: "Sujith", p: "Defense", s: 3, a: 4 },
+                { n: "Ajay", p: "Forward", s: 8, a: 7 }, { n: "Alex", p: "Forward", s: 6, a: 9 }, { n: "Subin", p: "Forward", s: 7, a: 6 }, { n: "Anoop", p: "Forward", s: 7, a: 5 }
+            ];
+            if (confirm(`Attempting to restore ${coreData.length} core players. Duplicates will be ignored.`)) {
+                btn.disabled = true; btn.innerText = "Syncing...";
+                try {
+                    for (const p of coreData) {
+                        const exists = repository.some(ex => ex.name.toLowerCase() === p.n.toLowerCase());
+                        if (!exists) {
+                            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'players'), {
+                                name: p.n, ageGroup: "31-35", posPrimary: p.p, posSecondary: "None", skill: p.s, agility: p.a, ts: Date.now(), peerRatings: []
+                            });
+                        }
+                    }
+                    alert("Restoration Attempt Complete.");
+                } catch(e) { alert("Error during restoration: " + e.message); }
+                btn.disabled = false; btn.innerText = "Restore Maverick Core (16 Players)";
+            }
+        };
+
+        window.closeModals = () => { document.querySelectorAll('.setup-overlay').forEach(m => m.style.display = 'none'); };
+
+        window.shareTeamsToWA = () => {
+            const b = currentTeams.black.map(p => `• ${p.name}`).join('%0A');
+            const o = currentTeams.orange.map(p => `• ${p.name}`).join('%0A');
+            const msg = `*THE MAVERICKS MATCH DAY*%0A%0A*TEAM BLACK:*%0A${b}%0A%0A*TEAM ORANGE:*%0A${o}%0A%0A_Sync at blacbold.github.io/TheMavericks_`;
+            window.open(`https://wa.me/?text=${msg}`, '_blank');
+        };
+
+        window.generateScoutReport = async () => {
+            const content = document.getElementById('ai-scout-content');
+            content.innerHTML = '<div class="h-4 w-full shimmer rounded-full mt-2"></div>';
+            const prompt = `8-a-side soccer match analysis. Black vs Orange. Provide 3 tactical tips. Black: ${currentTeams.black.map(p=>p.name).join(', ')}. Orange: ${currentTeams.orange.map(p=>p.name).join(', ')}.`;
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const d = await r.json();
+                content.innerText = d.candidates?.[0]?.content?.parts?.[0]?.text || "No insights found.";
+            } catch (e) { content.innerText = "AI Scout offline."; }
+        };
+
+        // CORE SYNC & AUTH
+        async function init() {
+            try {
+                const appInstance = initializeApp(firebaseConfig);
+                auth = getAuth(appInstance);
+                db = getFirestore(appInstance);
+                
+                const performSignIn = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        try { return await signInWithCustomToken(auth, __initial_auth_token); } catch (e) { console.warn("Fallback auth."); }
+                    }
+                    return await signInAnonymously(auth);
+                };
+
+                performSignIn().then(() => {
+                    onAuthStateChanged(auth, (u) => {
+                        user = u;
+                        if (user) {
+                            document.getElementById('sync-chip').innerText = "Synced";
+                            document.getElementById('sync-chip').className = "text-[9px] font-black uppercase bg-emerald-50 px-4 py-2 rounded-full text-emerald-600 border-2 border-emerald-100 shadow-sm";
+                            startSyncing();
+                        }
+                    });
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        function startSyncing() {
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'players'), (snapshot) => {
+                const raw = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                const uniqueMap = new Map();
+                raw.forEach(p => { const key = (p.name || "").trim().toLowerCase(); if (!uniqueMap.has(key) || (p.ts || 0) > (uniqueMap.get(key).ts || 0)) uniqueMap.set(key, p); });
+                repository = Array.from(uniqueMap.values());
+                renderAttendance();
+                renderRepoListUI(repository);
+            });
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'games'), (snapshot) => {
+                games = snapshot.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.ts - a.ts);
+                renderGamesList();
+            });
+        }
+
+        function getTruePower(p) {
+            let self = (parseInt(p.skill)||5) + (parseInt(p.agility)||5);
+            const peerR = p.peerRatings || [];
+            let avgS = peerR.length > 0 ? peerR.reduce((a,b)=>a+parseInt(b.s),0)/peerR.length : 5;
+            let avgA = peerR.length > 0 ? peerR.reduce((a,b)=>a+parseInt(b.a),0)/peerR.length : 5;
+            const ageWeights = { "21-25": 1.1, "26-30": 1.05, "31-35": 1.0, "36-40": 0.95, "41-45": 0.9, "46-50": 0.88, "50+": 0.85 };
+            return ((self * 0.4) + ((avgS + avgA) * 0.6)) * (ageWeights[p.ageGroup] || 1.0);
+        }
+
+        function renderAttendance() {
+            const list = document.getElementById('attendance-list');
+            list.innerHTML = '';
+            repository.sort((a,b) => a.name.localeCompare(b.name)).forEach(p => {
+                const checked = attendingIds.has(p.id);
+                const div = document.createElement('div');
+                div.className = `p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-4 ${checked ? 'bg-orange-50 border-orange-500 shadow-lg' : 'bg-white border-stone-100'}`;
+                div.innerHTML = `<div class="flex-grow"><p class="font-black text-xs text-zinc-900 uppercase">${p.name}</p><p class="text-[9px] font-bold text-stone-400 mt-1 uppercase">${p.ageGroup} • ${p.posPrimary}</p></div><div class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${checked ? 'bg-orange-600 border-orange-600' : 'bg-white'}">${checked ? '<span class="text-white text-[9px] font-black">✔</span>' : ''}</div>`;
+                div.onclick = () => { if (checked) attendingIds.delete(p.id); else attendingIds.add(p.id); renderAttendance(); };
+                list.appendChild(div);
+            });
+            guests.forEach(g => {
+                const div = document.createElement('div');
+                div.className = "p-5 rounded-2xl bg-zinc-900 text-white flex items-center gap-4 shadow-xl";
+                div.innerHTML = `<div class="flex-grow"><p class="font-black text-xs italic text-orange-400 uppercase">${g.name}</p></div><button onclick="guests=guests.filter(x=>x.id!=='${g.id}');renderAttendance();" class="px-2 font-bold text-xl">×</button>`;
+                list.appendChild(div);
+            });
+            const total = attendingIds.size + guests.length;
+            document.getElementById('attending-count').innerText = total;
+            document.getElementById('deploy-btn').disabled = total < 16;
+            document.getElementById('deploy-requirement').innerText = total >= 16 ? "Squad Locked & Ready" : `Need ${16 - total} more players`;
+        }
+
+        function renderRepoListUI(players) {
+            const list = document.getElementById('repo-list');
+            list.innerHTML = '';
+            players.sort((a,b) => a.name.localeCompare(b.name)).forEach(p => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-6 rounded-2xl border border-stone-100 shadow-sm flex justify-between items-center transition-all hover:border-orange-200";
+                div.innerHTML = `<div><p class="font-black text-sm uppercase text-zinc-900">${p.name}</p><p class="text-[9px] font-bold text-stone-400 uppercase">${p.posPrimary} • Age ${p.ageGroup}</p></div><div class="flex items-center gap-2"><button onclick="window.openRatingModal('${p.id}')" class="bg-zinc-50 text-zinc-600 px-4 py-2 rounded-xl text-[9px] font-black uppercase">Rate</button><button onclick="window.deletePlayer('${p.id}')" class="admin-only bg-red-50 text-red-600 px-4 py-2 rounded-xl text-[9px] font-black uppercase">Delete</button></div>`;
+                list.appendChild(div);
+            });
+        }
+
+        function renderGamesList() {
+            const list = document.getElementById('games-list');
+            list.innerHTML = games.length ? '' : '<div class="py-20 text-center text-stone-300 italic text-sm font-medium">Connecting to Season Records...</div>';
+            games.forEach(g => {
+                const rts = g.mvpRatings || [];
+                const avg = rts.length ? (rts.reduce((a,b)=>a+b.stars,0)/rts.length).toFixed(1) : 0;
+                const div = document.createElement('div');
+                div.className = "bg-white p-6 rounded-3xl border border-stone-200 shadow-xl space-y-4 animate-pop";
+                div.innerHTML = `<div class="flex justify-between items-center border-b pb-3"><span class="text-[10px] font-black uppercase text-stone-400">${g.date}</span><span class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">${g.winner} WIN</span></div><div class="flex items-center justify-around py-4 text-center"><div><p class="text-[9px] font-black text-zinc-900 uppercase">Black</p><p class="text-4xl font-black">${g.scoreBlack}</p></div><div class="text-2xl font-black text-stone-200">vs</div><div><p class="text-[9px] font-black text-orange-600 uppercase">Orange</p><p class="text-4xl font-black text-orange-600">${g.scoreOrange}</p></div></div><div class="space-y-4"><div class="p-3 bg-stone-50 rounded-xl"><p class="text-[8px] font-black text-yellow-600 uppercase tracking-widest mb-1">MVP</p><p class="text-[10px] font-bold text-zinc-800 uppercase italic">${g.mvpName}</p></div><button onclick="window.openMVPRatingModal('${g.id}')" class="w-full bg-zinc-100 text-zinc-600 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2"><span>★</span> ${avg > 0 ? `Rating: ${avg}` : 'Rate MVP'}</button></div>`;
+                list.appendChild(div);
+            });
+        }
+
+        function renderFinalOutput(tb, to) {
+            document.getElementById('match-results').classList.remove('hidden');
+            document.getElementById('match-results').scrollIntoView({ behavior: 'smooth' });
+            const listB = document.getElementById('list-black'), listO = document.getElementById('list-orange');
+            listB.innerHTML = ''; listO.innerHTML = '';
+            const card = (p, isB) => `<div class="p-4 rounded-2xl border ${isB ? 'bg-zinc-800 border-zinc-700' : 'bg-orange-50 border-orange-400'} flex justify-between items-center shadow-lg transition-all active:scale-95"><div class="flex flex-col text-white"><span class="font-black text-xs uppercase">${p.name}</span><span class="text-[8px] opacity-60 uppercase mt-0.5">${p.posPrimary}</span></div></div>`;
+            tb.forEach(p => listB.innerHTML += card(p, true));
+            to.forEach(p => listO.innerHTML += card(p, false));
+            drawTactics(tb, to);
+            window.generateScoutReport();
+        }
+
+        function drawTactics(tb, to) {
+            const canvas = document.getElementById('pitchCanvas'), ctx = canvas.getContext('2d'), box = canvas.parentElement;
+            canvas.width = box.clientWidth * 2; canvas.height = box.clientHeight * 2; ctx.scale(2, 2);
+            const w = box.clientWidth, h = box.clientHeight;
+            ctx.fillStyle = "#166534"; ctx.fillRect(0,0,w,h);
+            ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 2; ctx.strokeRect(14, 14, w-28, h-28);
+            ctx.beginPath(); ctx.moveTo(w/2, 14); ctx.lineTo(w/2, h-14); ctx.stroke(); ctx.beginPath(); ctx.arc(w/2, h/2, 38, 0, Math.PI*2); ctx.stroke();
+
+            const drawTeam = (players, isLeft) => {
+                const gk = players.filter(p => p.posPrimary === "GK");
+                const def = players.filter(p => p.posPrimary === "Defense");
+                const mid = players.filter(p => p.posPrimary === "Midfield");
+                const fwd = players.filter(p => p.posPrimary === "Forward");
+                const drawIcon = (p, xPct, yPct) => {
+                    let tx = isLeft ? (18 + xPct * (w/2 - 25)) : (w - 18 - xPct * (w/2 - 25));
+                    let ty = 18 + yPct * (h - 36);
+                    ctx.beginPath(); ctx.arc(tx, ty, 11, 0, Math.PI*2); 
+                    ctx.fillStyle = isLeft ? "#000" : "#f97316"; ctx.fill();
+                    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
+                    ctx.fillStyle = "#fff"; ctx.font = "bold 8px sans-serif"; ctx.textAlign = "center";
+                    ctx.fillText(p.name.split(' ')[0].substring(0,2).toUpperCase(), tx, ty + 3);
+                };
+                gk.forEach((p, i) => drawIcon(p, 0.05, 0.5));
+                def.forEach((p, i) => drawIcon(p, 0.3, (i + 1) / (def.length + 1)));
+                mid.forEach((p, i) => drawIcon(p, 0.6, (i + 1) / (mid.length + 1)));
+                fwd.forEach((p, i) => drawIcon(p, 0.85, (i + 1) / (fwd.length + 1)));
+            };
+            drawTeam(tb, true); drawTeam(to, false);
+        }
 
         window.openRatingModal = (id) => {
             const p = repository.find(x => x.id === id);
@@ -340,315 +562,30 @@
             };
         };
 
-        window.setMVP = (id) => {
-            currentMVP = id;
-            document.querySelectorAll('.mvp-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.id === id));
+        window.triggerAdmin = () => {
+            adminClicks++;
+            if (adminClicks >= 5) {
+                document.body.classList.add('admin-active');
+                document.getElementById('admin-badge').classList.remove('hidden');
+                alert("ADMIN MODE ACTIVE: Restore and Delete tools enabled.");
+                renderRepoListUI(repository); 
+            }
         };
 
-        window.logMatchResult = () => {
-            const container = document.getElementById('stats-inputs');
-            container.innerHTML = '';
-            currentMVP = null;
-            const allPlayers = [...currentTeams.black, ...currentTeams.orange];
-            allPlayers.forEach(p => {
-                container.innerHTML += `
-                    <div class="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100" data-pid="${p.id}" data-pname="${p.name}">
-                        <div class="flex-grow">
-                            <p class="font-black text-xs text-zinc-900">${p.name}</p>
-                            <button onclick="window.setMVP('${p.id}')" data-id="${p.id}" class="mvp-btn text-[9px] font-black uppercase mt-1 flex items-center gap-1 border border-stone-200 px-2 py-1 rounded">★ MVP</button>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="text-center"><p class="text-[7px] font-black uppercase text-zinc-400 mb-1">G</p><input type="number" class="goal-input w-10 h-8 text-center font-black bg-white border-2 border-stone-100 rounded-lg" value="0"></div>
-                            <div class="text-center"><p class="text-[7px] font-black uppercase text-zinc-400 mb-1">A</p><input type="number" class="assist-input w-10 h-8 text-center font-black bg-white border-2 border-stone-100 rounded-lg" value="0"></div>
-                        </div>
-                    </div>`;
-            });
-            document.getElementById('stats-modal').style.display = 'flex';
-        };
-
-        window.saveStatsAndClose = async () => {
-            if (!user) return;
-            const players = Array.from(document.querySelectorAll('#stats-inputs div[data-pid]')).map(div => ({
-                id: div.dataset.pid,
-                name: div.dataset.pname,
-                g: div.querySelector('.goal-input').value,
-                a: div.querySelector('.assist-input').value
-            }));
-            
-            const bScore = parseInt(document.getElementById('score-black').value);
-            const oScore = parseInt(document.getElementById('score-orange').value);
-            const winnerName = bScore > oScore ? "TEAM BLACK" : (oScore > bScore ? "TEAM ORANGE" : "DRAW");
-            const winningPlayers = bScore > oScore ? currentTeams.black.map(p => p.name) : (oScore > bScore ? currentTeams.orange.map(p => p.name) : []);
-
-            const matchData = {
-                ts: Date.now(),
-                date: new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }),
-                scoreBlack: bScore,
-                scoreOrange: oScore,
-                winner: winnerName,
-                winnerSquad: winningPlayers,
-                rosterBlack: currentTeams.black.map(p => p.name),
-                rosterOrange: currentTeams.orange.map(p => p.name),
-                playerStats: players,
-                mvpName: players.find(p => p.id === currentMVP)?.name || "N/A",
-                mvpId: currentMVP,
-                mvpRatings: []
-            };
-            
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'games'), matchData);
-                closeModals();
-                window.setView('records');
-            } catch(e) { alert("Save failed."); }
+        window.setView = (view) => {
+            document.getElementById('view-match').classList.toggle('hidden', view !== 'match');
+            document.getElementById('view-records').classList.toggle('hidden', view !== 'records');
+            document.getElementById('view-registry').classList.toggle('hidden', view !== 'registry');
+            document.getElementById('action-bar').classList.toggle('hidden', view !== 'match');
+            document.querySelectorAll('nav button').forEach(b => b.className = "flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all");
+            document.getElementById(`nav-${view}`).className = "flex-1 py-5 text-[10px] font-black uppercase tracking-widest tab-active transition-all";
         };
 
         window.closeModals = () => { document.querySelectorAll('.setup-overlay').forEach(m => m.style.display = 'none'); };
 
-        window.openMVPRatingModal = (gameId) => {
-            const game = games.find(g => g.id === gameId);
-            if (!game || !game.mvpName) return;
-            document.getElementById('mvp-rating-name').innerText = `Scouting: ${game.mvpName}`;
-            document.getElementById('mvp-rating-modal').style.display = 'flex';
-            selectedStars = 0;
-            updateStarUI();
-            document.getElementById('submit-mvp-rate-btn').onclick = async () => {
-                if (selectedStars === 0) return alert("Select star count.");
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId), {
-                    mvpRatings: arrayUnion({ u: user.uid, stars: selectedStars, ts: Date.now() })
-                });
-                closeModals();
-            };
-        };
-
-        function updateStarUI() {
-            document.querySelectorAll('.star-rating').forEach(s => {
-                s.classList.toggle('active', parseInt(s.dataset.val) <= selectedStars);
-            });
-        }
-
-        document.querySelectorAll('.star-rating').forEach(s => {
-            s.onclick = () => { selectedStars = parseInt(s.dataset.val); updateStarUI(); };
-        });
-
-        // WHATSAPP INTEGRATION
-        window.shareTeamsToWA = () => {
-            const b = currentTeams.black.map(p => `• ${p.name}`).join('%0A');
-            const o = currentTeams.orange.map(p => `• ${p.name}`).join('%0A');
-            const msg = `*THE MAVERICKS MATCH DAY*%0A%0A*TEAM BLACK:*%0A${b}%0A%0A*TEAM ORANGE:*%0A${o}%0A%0A_Generated via blacbold.github.io/TheMavericks_`;
-            window.open(`https://wa.me/?text=${msg}`, '_blank');
-        };
-
-        window.shareReportToWA = (gameId) => {
-            const g = games.find(x => x.id === gameId);
-            if (!g) return;
-            const scorers = (g.playerStats || []).filter(p => parseInt(p.g) > 0).map(p => `${p.name} (${p.g})`).join(', ');
-            const winSquad = g.winnerSquad && g.winnerSquad.length > 0 ? `%0A*WINNING SQUAD:* ${g.winnerSquad.join(', ')}` : '';
-            const msg = `*THE MAVERICKS POST-MATCH REPORT*%0A%0A*${g.date}*%0A*FINAL:* BLACK ${g.scoreBlack} - ${g.scoreOrange} ORANGE%0A*WINNER:* ${g.winner}${winSquad}%0A%0A*MVP:* ${g.mvpName}%0A${scorers ? `*SCORERS:* ${scorers}` : ''}%0A%0A_Official Season Record_`;
-            window.open(`https://wa.me/?text=${msg}`, '_blank');
-        };
-
-        // INITIALIZATION
-        async function init() {
-            try {
-                const appInstance = initializeApp(MAV_CORE_CONFIG);
-                auth = getAuth(appInstance);
-                db = getFirestore(appInstance);
-
-                const performSignIn = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        try { return await signInWithCustomToken(auth, __initial_auth_token); } catch (e) { console.warn("Fallback."); }
-                    }
-                    return await signInAnonymously(auth);
-                };
-
-                performSignIn().then(() => {
-                    onAuthStateChanged(auth, (u) => {
-                        user = u;
-                        if (user) {
-                            document.getElementById('sync-chip').innerText = "Synced";
-                            document.getElementById('sync-chip').className = "text-[9px] font-black uppercase bg-emerald-50 px-4 py-2 rounded-full text-emerald-600 border-2 border-emerald-100 shadow-sm";
-                            document.getElementById('status-debug').innerText = `ID: ${user.uid.substring(0,8)}`;
-                            startSyncing();
-                        }
-                    });
-                });
-            } catch (err) { document.getElementById('sync-chip').innerText = "Offline"; }
-        }
-
-        function startSyncing() {
-            if (!user) return;
-            const playersPath = collection(db, 'artifacts', appId, 'public', 'data', 'players');
-            const gamesPath = collection(db, 'artifacts', appId, 'public', 'data', 'games');
-
-            onSnapshot(query(playersPath), (snapshot) => {
-                const raw = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                const uniqueMap = new Map();
-                raw.forEach(p => {
-                    const key = (p.name || "").trim().toLowerCase();
-                    if (!uniqueMap.has(key) || (p.ts || 0) > (uniqueMap.get(key).ts || 0)) uniqueMap.set(key, p);
-                });
-                repository = Array.from(uniqueMap.values());
-                renderAttendance();
-                renderRepoListUI(repository);
-            }, (err) => {
-                if (err.code === 'permission-denied') document.getElementById('status-debug').innerText = "Firestore Denied";
-            });
-
-            onSnapshot(query(gamesPath), (snapshot) => {
-                games = snapshot.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.ts - a.ts);
-                renderGamesList();
-            });
-        }
-
-        function getTruePower(p) {
-            let self = (parseInt(p.skill)||5) + (parseInt(p.agility)||5);
-            const peerR = p.peerRatings || [];
-            let avgS = peerR.length > 0 ? peerR.reduce((a,b)=>a+parseInt(b.s),0)/peerR.length : 5;
-            let avgA = peerR.length > 0 ? peerR.reduce((a,b)=>a+parseInt(b.a),0)/peerR.length : 5;
-            const ageWeights = { "21-25": 1.1, "26-30": 1.05, "31-35": 1.0, "36-40": 0.95, "41-45": 0.9, "46-50": 0.88, "50+": 0.85 };
-            return ((self * 0.4) + ((avgS + avgA) * 0.6)) * (ageWeights[p.ageGroup] || 1.0);
-        }
-
-        window.generateStrategicInsights = async () => { alert("Coach Gemini analyzing match dynamics..."); };
-
-        function renderGamesList() {
-            const list = document.getElementById('games-list');
-            if (games.length === 0) { list.innerHTML = '<div class="py-20 text-center text-stone-300 italic text-sm">No match history found.</div>'; return; }
-            list.innerHTML = '';
-            games.forEach(g => {
-                const scorers = (g.playerStats || []).filter(p => parseInt(p.g) > 0).map(p => `${p.name} (${p.g})`).join(', ');
-                
-                // Calculate average star rating
-                const rts = g.mvpRatings || [];
-                const avgStars = rts.length > 0 ? (rts.reduce((a,b)=>a+b.stars,0)/rts.length).toFixed(1) : 0;
-
-                const item = document.createElement('div');
-                item.className = "bg-white p-6 rounded-3xl border border-stone-200 shadow-xl space-y-4 animate-pop";
-                item.innerHTML = `
-                    <div class="flex justify-between items-center border-b border-stone-100 pb-3">
-                        <span class="text-[10px] font-black uppercase text-stone-400 tracking-widest">${g.date}</span>
-                        <div class="flex gap-2">
-                            ${g.mvpName !== "N/A" ? `<span class="text-[8px] font-black uppercase text-yellow-600 bg-yellow-50 px-2 py-1 rounded border border-yellow-200">★ MVP: ${g.mvpName}</span>` : ''}
-                            <span class="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">${g.winner}</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-around py-4">
-                        <div class="text-center"><p class="text-[9px] font-black text-zinc-900 uppercase">Black</p><p class="text-4xl font-black">${g.scoreBlack}</p></div>
-                        <div class="text-2xl font-black text-stone-200">vs</div>
-                        <div class="text-center"><p class="text-[9px] font-black text-orange-600 uppercase">Orange</p><p class="text-4xl font-black text-orange-600">${g.scoreOrange}</p></div>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-1 gap-2">
-                            ${scorers ? `<div class="p-3 bg-stone-50 rounded-xl"><p class="text-[8px] font-black text-stone-400 uppercase tracking-widest mb-1">Goal Scorers</p><p class="text-[10px] font-bold text-zinc-800 uppercase">${scorers}</p></div>` : ''}
-                            ${g.winnerSquad && g.winnerSquad.length > 0 ? `<div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100"><p class="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Winning Mavericks</p><p class="text-[10px] font-bold text-emerald-800 uppercase italic">${g.winnerSquad.join(', ')}</p></div>` : ''}
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="window.openMVPRatingModal('${g.id}')" class="flex-1 bg-zinc-100 text-zinc-600 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
-                                <span>★</span> Rate MVP (${avgStars > 0 ? `${avgStars}/5` : 'No votes'})
-                            </button>
-                            <button onclick="window.shareReportToWA('${g.id}')" class="flex-1 wa-brand py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-md">WhatsApp Report</button>
-                        </div>
-                    </div>`;
-                list.appendChild(item);
-            });
-        }
-
-        function renderAttendance() {
-            const list = document.getElementById('attendance-list');
-            if (!list) return; list.innerHTML = '';
-            repository.sort((a,b) => a.name.localeCompare(b.name)).forEach(p => {
-                const checked = attendingIds.has(p.id);
-                const div = document.createElement('div');
-                div.className = `p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-4 ${checked ? 'bg-orange-50 border-orange-500' : 'bg-white border-stone-100'}`;
-                div.innerHTML = `<div class="flex-grow"><p class="font-black text-xs text-zinc-900">${p.name}</p><p class="text-[9px] font-bold text-stone-400 mt-1 uppercase">${p.ageGroup} • ${p.posPrimary}</p></div><div class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${checked ? 'bg-orange-600 border-orange-600' : 'bg-white'}">${checked ? '<span class="text-white text-[9px] font-black">✔</span>' : ''}</div>`;
-                div.onclick = () => { if (checked) attendingIds.delete(p.id); else attendingIds.add(p.id); renderAttendance(); };
-                list.appendChild(div);
-            });
-            guests.forEach(g => {
-                const div = document.createElement('div');
-                div.className = "p-5 rounded-2xl bg-zinc-900 text-white flex items-center gap-4 shadow-xl animate-pop";
-                div.innerHTML = `<div class="flex-grow"><p class="font-black text-xs italic text-orange-400">${g.name}</p></div><button onclick="window.removeGuest('${g.id}')" class="px-2 font-bold text-xl">×</button>`;
-                list.appendChild(div);
-            });
-            document.getElementById('attending-count').innerText = attendingIds.size + guests.length;
-        }
-
-        function renderRepoListUI(players) {
-            const list = document.getElementById('repo-list');
-            if (!list) return; list.innerHTML = '';
-            players.sort((a,b) => a.name.localeCompare(b.name)).forEach(p => {
-                const div = document.createElement('div');
-                div.className = "p-6 flex flex-col transition-colors hover:bg-stone-50 gap-4";
-                div.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div class="flex flex-col"><span class="font-black text-sm text-zinc-800">${p.name}</span><span class="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">${p.posPrimary} • Age ${p.ageGroup}</span></div>
-                        <div class="flex items-center gap-3">
-                            <div class="text-right"><span class="block text-[8px] font-black text-stone-300 uppercase leading-tight">Calc PWR</span><span class="text-xl font-black text-orange-600">${getTruePower(p).toFixed(1)}</span></div>
-                            <button onclick="window.openRatingModal('${p.id}')" class="px-5 py-2 bg-zinc-100 text-zinc-600 text-[10px] font-black uppercase rounded-full hover:bg-zinc-200 transition-colors">Rate</button>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2"><button onclick="window.generatePlayerBio('${p.id}')" class="text-[9px] font-black uppercase text-orange-600 border border-orange-100 bg-orange-50 px-3 py-1.5 rounded transition-all">✨ Scouting Bio</button></div>
-                    <div id="bio-${p.id}"></div>`;
-                list.appendChild(div);
-            });
-        }
-
-        function renderFinalOutput(tb, to, sb, so) {
-            document.getElementById('match-welcome').classList.add('hidden');
-            const res = document.getElementById('match-results');
-            res.classList.remove('hidden'); res.scrollIntoView({ behavior: 'smooth' });
-            const listB = document.getElementById('list-black'), listO = document.getElementById('list-orange');
-            listB.innerHTML = ''; listO.innerHTML = '';
-            const card = (p, isB) => `<div class="p-4 rounded-2xl border ${isB ? 'bg-zinc-800 border-zinc-700' : 'bg-orange-500 border-orange-400'} flex justify-between items-center shadow-lg"><div class="flex flex-col text-white"><span class="font-black text-xs">${p.name}</span><span class="text-[8px] opacity-60 uppercase mt-0.5">${p.posPrimary}</span></div><span class="text-[9px] font-black text-white/40">${getTruePower(p).toFixed(0)}</span></div>`;
-            tb.forEach(p => listB.innerHTML += card(p, true));
-            to.forEach(p => listO.innerHTML += card(p, false));
-            document.getElementById('pwr-black').innerText = `PWR: ${sb.toFixed(0)}`; document.getElementById('pwr-orange').innerText = `PWR: ${so.toFixed(0)}`;
-            drawTactics(tb, to);
-        }
-
-        function drawTactics(tb, to) {
-            const canvas = document.getElementById('pitchCanvas'), ctx = canvas.getContext('2d'), box = canvas.parentElement;
-            canvas.width = box.clientWidth * 2; canvas.height = box.clientHeight * 2; ctx.scale(2, 2);
-            const w = box.clientWidth, h = box.clientHeight;
-            ctx.fillStyle = "#166534"; ctx.fillRect(0,0,w,h);
-            ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 2; ctx.strokeRect(14, 14, w-28, h-28);
-            ctx.beginPath(); ctx.moveTo(w/2, 14); ctx.lineTo(w/2, h-14); ctx.stroke(); ctx.beginPath(); ctx.arc(w/2, h/2, 38, 0, Math.PI*2); ctx.stroke();
-            const s8 = [{x:0.08,y:0.5},{x:0.25,y:0.3},{x:0.25,y:0.7},{x:0.55,y:0.2},{x:0.55,y:0.5},{x:0.55,y:0.8},{x:0.85,y:0.35},{x:0.85,y:0.65}];
-            const drawTeam = (players, isLeft) => {
-                players.forEach((p, i) => {
-                    let tx = isLeft ? (18 + (s8[i]?.x||0.5)*(w/2-25)) : (w - 18 - (s8[i]?.x||0.5)*(w/2-25));
-                    let ty = 18 + (s8[i]?.y||0.5)*(h-36);
-                    ctx.beginPath(); ctx.arc(tx, ty, 11, 0, Math.PI*2); ctx.fillStyle = isLeft ? "#000" : "#f97316"; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
-                    ctx.fillStyle = "#fff"; ctx.font = "bold 8px sans-serif"; ctx.textAlign = "center";
-                    ctx.fillText(p.name.split(' ')[0].substring(0,2).toUpperCase(), tx, ty + 3);
-                    ctx.shadowBlur = 4; ctx.shadowColor = "rgba(0,0,0,1)"; ctx.fillText(p.name.split(' ')[0].toUpperCase(), tx, ty + 22); ctx.shadowBlur = 0;
-                });
-            };
-            drawTeam(tb, true); drawTeam(to, false);
-        }
-
-        window.generatePlayerBio = async (id) => {
-            const p = repository.find(x => x.id === id);
-            const area = document.getElementById(`bio-${id}`);
-            area.innerHTML = '<div class="h-4 w-full shimmer rounded-full mt-2"></div>';
-            const prompt = `Write a gritty 1-sentence scout profile for Maverick ${p.name}. Age: ${p.ageGroup}, Role: ${p.posPrimary}, Rating: ${getTruePower(p).toFixed(1)}. Professional tone.`;
-            try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-                const d = await r.json();
-                area.innerHTML = `<p class="text-[10px] italic text-orange-600 font-medium mt-2 leading-relaxed">✨ ${d.candidates?.[0]?.content?.parts?.[0]?.text}</p>`;
-            } catch (e) { area.innerHTML = "Offline bio."; }
-        };
-
-        window.downloadCanvas = () => { const c = document.getElementById('pitchCanvas'); const l = document.createElement('a'); l.download = "Mavericks_Match.png"; l.href = c.toDataURL('image/png'); l.click(); };
-
         document.getElementById('reg-form').onsubmit = async (e) => {
             e.preventDefault();
-            if (!user) return;
-            const p = { 
-                name: document.getElementById('reg-name').value, ageGroup: document.getElementById('reg-age').value, posPrimary: document.getElementById('reg-pos1').value, 
-                posSecondary: document.getElementById('reg-pos2').value, skill: parseInt(document.getElementById('reg-skill').value), agility: parseInt(document.getElementById('reg-agility').value),
-                ts: Date.now(), peerRatings: []
-            };
+            const p = { name: document.getElementById('reg-name').value, ageGroup: document.getElementById('reg-age').value, posPrimary: document.getElementById('reg-pos1').value, posSecondary: document.getElementById('reg-pos2').value, skill: 5, agility: 5, ts: Date.now(), peerRatings: [] };
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'players'), p);
             e.target.reset();
         };
